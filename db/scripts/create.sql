@@ -8,6 +8,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `customer` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `email` VARCHAR(128) NOT NULL,
   `password` VARCHAR(128) NOT NULL,
   `display_name` VARCHAR(128) NULL,
@@ -25,9 +26,11 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `customer_access` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `customer_id` INT NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `scope` VARCHAR(45) NOT NULL,
   `apikey` VARCHAR(45) NOT NULL,
   `apisecret` VARCHAR(45) NOT NULL,
+  `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_customer_access_customer_idx` (`customer_id` ASC),
   UNIQUE INDEX `apikey_UNIQUE` (`apikey` ASC),
@@ -45,6 +48,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `customer_device` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `customer_id` INT NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `pubkey` VARCHAR(1024) NULL,
   `algorithm` VARCHAR(45) NULL,
   `info` VARCHAR(255) NULL,
@@ -65,10 +69,12 @@ CREATE TABLE IF NOT EXISTS `token` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `owner_id` INT NOT NULL,
   `owner_device_id` INT NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
+  `updated` TIMESTAMP NOT NULL DEFAULT NOW(),
   `code` VARCHAR(64) NOT NULL,
   `amount` DECIMAL(13,4) NOT NULL,
   `symbol` VARCHAR(5) NOT NULL,
-  `state` ENUM('NEW','DELETED','LOCKED','COMPLETED','FAILURE','EXPIRED') NOT NULL DEFAULT 'NEW',
+  `state` ENUM('OPEN','DELETED','LOCKED','COMPLETE','FAILURE','EXPIRED','CLEARED','REJECTED') NOT NULL DEFAULT 'OPEN',
   `expires` TIMESTAMP NULL,
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),

@@ -1,0 +1,29 @@
+{
+  "name": "dncash-io",
+  "version": "1.0.0",
+  "description": "dncash.io core API service",
+  "main": "app.ts",
+  "scripts": {
+    "start": "node dist/app.js",
+    "develop": "tsc && concurrently \"tsc -w\" \"nodemon dist/app.js\"",
+    "build": "tsc",
+    "postinstall": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://tom.wincor-nixdorf.com/repos/dncash-io"
+  },
+  "author": "Thorsten Liese",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^9.4.6",
+    "concurrently": "^3.5.1",
+    "nodemon": "^1.15.1",
+    "typescript": "^2.7.2"
+  },
+  "dependencies": {
+    "express": "^4.16.2",
+    "mysql": "^2.15.0",
+    "nocache": "^2.0.0"
+  }
+}
