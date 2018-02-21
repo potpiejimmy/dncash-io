@@ -10,7 +10,8 @@ import * as express from 'express';
 import { json } from 'body-parser';
 import * as nocache from 'nocache';
 
-//import { OptRouter } from "./routes/opt";
+// Routes:
+import { routerAdminV1 } from "./routes/admin.v1";
 
 const app: express.Application = express();
 
@@ -28,7 +29,8 @@ app.use(function(req, res, next) {
   
 app.get('/', (req, res) => res.send('dncash.io is running.'))
 
-//app.use("/opt", OptRouter);
+// Routes:
+app.use("/dnapi/admin/v1", routerAdminV1);
 
 let port = process.env.PORT || 3000;
 app.listen(port, () => console.log('dncash.io listening on port ' + port));
