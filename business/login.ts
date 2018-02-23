@@ -55,6 +55,7 @@ function authenticate(user): any {
 
 
 function verifyCaptcha(captcha : string) : Promise<any> {
+    // return Promise.resolve({success:true});
     var form = new FormData();
     form.append('secret', process.env.CAPTCHA_SECRET || '6Lc7zEcUAAAAALq3kHl5F4WPe_Jiqc3vT0vq3m0F');
     form.append('response', captcha);

@@ -1,7 +1,12 @@
+-- MySQL Workbench Forward Engineering
+
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
 
 -- -----------------------------------------------------
 -- Table `customer`
@@ -28,8 +33,8 @@ CREATE TABLE IF NOT EXISTS `customer_access` (
   `customer_id` INT NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `scope` VARCHAR(45) NOT NULL,
-  `apikey` VARCHAR(45) NOT NULL,
-  `apisecret` VARCHAR(45) NOT NULL,
+  `apikey` VARCHAR(64) NOT NULL,
+  `apisecret` VARCHAR(64) NOT NULL,
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_customer_access_customer_idx` (`customer_id` ASC),
@@ -75,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   `secure_code` VARCHAR(1024) NOT NULL,
   `amount` DECIMAL(13,4) NOT NULL,
   `symbol` VARCHAR(5) NOT NULL,
-  `state` ENUM('OPEN','DELETED','LOCKED','COMPLETE','FAILURE','EXPIRED','CLEARED','CANCELED','REJECTED') NOT NULL DEFAULT 'OPEN',
+  `state` ENUM('OPEN', 'DELETED', 'LOCKED', 'COMPLETE', 'FAILURE', 'EXPIRED', 'CLEARED', 'CANCELED', 'REJECTED') NOT NULL DEFAULT 'OPEN',
   `expires` TIMESTAMP NULL,
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),

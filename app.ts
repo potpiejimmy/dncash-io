@@ -10,7 +10,10 @@ import * as express from 'express';
 import { json } from 'body-parser';
 import * as nocache from 'nocache';
 
+import * as auth from "./util/auth";
+
 // Routes:
+import { routerAdminV1Auth } from "./routes/admin.v1.auth";
 import { routerAdminV1 } from "./routes/admin.v1";
 
 const app: express.Application = express();
@@ -29,8 +32,34 @@ app.use(function(req, res, next) {
   
 app.get('/', (req, res) => res.send('dncash.io is running.'))
 
-// Routes:
-app.use("/dnapi/admin/v1", routerAdminV1);
+// verifies the jwt for protected API routes
+let verifyTokenMiddleware = auth.verifyToken();
 
+// Routes:
+app.use("/dnapi/admin/v1", routerAdminV1Auth); // unsecured
+app.use("/dnapi/admin/v1", verifyTokenMiddleware, routerAdminV1); // 
+
+if (app.get('env') === 'production') {
+    app.set('trust proxy', 1) // trust first proxy, allows sending secure cookies even if SSL terminated on proxy  
+  }
+  
+// catch 404 and forward to error handler
+app.use(function(req: express.Request, res: express.Response, next) {
+    let err = new Error('Not Found: ' + req.originalUrl);
+    next(err);
+});
+
+// production error handler
+// no stacktrace leaked to user
+app.use(function(err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
+    console.log(err);
+    res.status(err.status || 500);
+    res.json({
+        error: {},
+        message: err.message || err
+    });
+});
+  
+// listen:
 let port = process.env.PORT || 3000;
 app.listen(port, () => console.log('dncash.io listening on port ' + port));

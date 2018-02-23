@@ -1,23 +1,33 @@
 import { Router, Request, Response, NextFunction } from "express";
-import * as config from "../config";
-import * as Login from "../business/login";
+import * as Access from "../business/access";
 
 export const routerAdminV1: Router = Router();
 
+// ------ access ------------------------
+
 /*
- * Sign in using user name and password
+ * Create and returns new API access key and secret
  */
-routerAdminV1.post("/auth", function (request: Request, response: Response, next: NextFunction) {
-    Login.login(request.body.user, request.body.password)
+routerAdminV1.post("/access", function (request: Request, response: Response, next: NextFunction) {
+    Access.createApiKey(request.user, request.body.scope)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
 
 /*
- * Register a new user
+ * Returns all API keys for given user (does not include secret)
  */
-routerAdminV1.post("/auth/register", function (request: Request, response: Response, next: NextFunction) {
-    Login.register(request.body)
+routerAdminV1.get("/access", function (request: Request, response: Response, next: NextFunction) {
+    Access.findByCustomerId(request.user.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Delete all API keys for given user
+ */
+routerAdminV1.delete("/access", function (request: Request, response: Response, next: NextFunction) {
+    Access.deleteByCustomerId(request.user.id)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
