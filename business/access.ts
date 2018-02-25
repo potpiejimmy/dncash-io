@@ -27,7 +27,10 @@ export function createApiKey(customer: any, scope: string): Promise<any> {
 }
 
 export function findByKey(key: string): Promise<any> {
-    return db.querySingle("select * from customer_access where apikey=?", [key]).then(res => res[0]);
+    return db.querySingle("select * from customer_access where apikey=?", [key]).then(res => {
+        if (res[0]) delete res[0].apisecret; // do not return secret
+        return res[0];
+    });
 }
 
 export function findByCustomerAndScope(customer: any, scope: string): Promise<any> {

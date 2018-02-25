@@ -6,7 +6,7 @@ export const routerAdminV1: Router = Router();
 // ------ access ------------------------
 
 /*
- * Create and returns new API access key and secret
+ * Create and returns new API access key (without secret)
  */
 routerAdminV1.post("/access", function (request: Request, response: Response, next: NextFunction) {
     Access.createApiKey(request.user, request.body.scope)
@@ -24,7 +24,7 @@ routerAdminV1.get("/access", function (request: Request, response: Response, nex
 });
 
 /*
- * Returns API key for given ID and customer, secure with password.
+ * Returns API secret for given ID and customer, secure with password.
  */
 routerAdminV1.put("/access/:id", function (request: Request, response: Response, next: NextFunction) {
     Access.findByCustomerAndId(request.user, request.body.password, request.params.id)
@@ -33,7 +33,7 @@ routerAdminV1.put("/access/:id", function (request: Request, response: Response,
 });
 
 /*
- * Delete all API keys for given user
+ * Delete given API key for given user
  */
 routerAdminV1.delete("/access/:id", function (request: Request, response: Response, next: NextFunction) {
     Access.deleteByCustomerAndId(request.user, request.params.id)
