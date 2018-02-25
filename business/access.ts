@@ -1,8 +1,10 @@
 import * as db from "../util/db";
 import * as crypto from "crypto";
+import * as Login from "./login";
+import * as config from '../config';
 
 export function createApiKey(customer: any, scope: string): Promise<any> {
-    if (scope != "token-api") throw "Unknown scope: " + scope;
+    if (!config.API_SCOPES.includes(scope)) throw "Unknown scope: " + scope;
 
     // create secure random numbers:
     let key = crypto.randomBytes(48).toString('base64');
@@ -24,24 +26,30 @@ export function createApiKey(customer: any, scope: string): Promise<any> {
     });
 }
 
-export function getApiKeys(customer: any): Promise<any> {
-    return findByCustomerId(customer.id);
-}
-
 export function findByKey(key: string): Promise<any> {
     return db.querySingle("select * from customer_access where apikey=?", [key]).then(res => res[0]);
 }
 
-export function findByCustomerId(customer_id: number): Promise<any> {
-    return db.querySingle("select * from customer_access where customer_id=?", [customer_id])
+export function findByCustomerAndScope(customer: any, scope: string): Promise<any> {
+    return db.querySingle("select * from customer_access where customer_id=? and scope=?", [customer.id, scope])
              .then(res => {
                  res.forEach(i => delete i.apisecret); // never return secret
                  return res;
              }); 
 }
 
-export function deleteByCustomerId(customer_id: number): Promise<any> {
-    return db.querySingle("delete from customer_access where customer_id=?", [customer_id]);
+export function findByCustomerAndId(customer: any, password: string, id: number): Promise<any> {
+    return Login.login(customer.email, password).then(res => {
+        if (res.token) // authentication successful?
+            // Note: this makes sure the ID belongs to the customer ID
+            return db.querySingle("select * from customer_access where customer_id=? and id=?", [customer.id, id]).then(res => res[0]); 
+        else
+            throw "Sorry, wrong password";
+    })
+}
+
+export function deleteByCustomerAndId(customer: any, id: number): Promise<any> {
+    return db.querySingle("delete from customer_access where customer_id=? and id=?", [customer.id, id]);
 }
 
 function insertNew(access: any): Promise<any> {

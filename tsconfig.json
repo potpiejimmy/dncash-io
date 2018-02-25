@@ -3,13 +3,13 @@
       "declaration": false,
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
-      "lib": ["es6", "dom"],
+      "lib": ["es2016", "dom"],
       "mapRoot": "dist",
       "module": "commonjs",
       "moduleResolution": "node",
       "outDir": "dist",
       "sourceMap": true,
-      "target": "es6",
+      "target": "es2016",
       "typeRoots": [
         "node_modules/@types"
       ]
