@@ -33,6 +33,10 @@ export function findByKey(key: string): Promise<any> {
     });
 }
 
+export function findByKeyAndSecret(key: string, secret: string): Promise<any> {
+    return db.querySingle("select * from customer_access where apikey=? and apisecret=?", [key, secret]).then(res => res[0]);
+}
+
 export function findByCustomerAndScope(customer: any, scope: string): Promise<any> {
     return db.querySingle("select * from customer_access where customer_id=? and scope=?", [customer.id, scope])
              .then(res => {

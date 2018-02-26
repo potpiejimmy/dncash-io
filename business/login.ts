@@ -2,10 +2,10 @@ import * as fetch from "node-fetch";
 import * as crypto from "crypto";
 import * as FormData from 'form-data';
 import * as db from "../util/db";
-import * as auth from "../util/auth";
+import * as jwtauth from "../util/jwtauth";
 
 export function register(user: any): Promise<any> {
-    return findUser(user.email).then(found => {
+    return findUserByEmail(user.email).then(found => {
         if (found) return {"result": "Sorry, this email is already registered."};
         // insert new user
         if (!user.password || user.password.length < 8) return {"result": "Sorry, bad password"};
@@ -24,7 +24,7 @@ export function register(user: any): Promise<any> {
 }
 
 export function login(email: string, password: string): Promise<any> {
-    return findUser(email).then(user => {
+    return findUserByEmail(email).then(user => {
         if (user && crypto.createHash('sha256').update(password || '').digest("hex") == user.password) {
             console.info("Login successful");
             return authenticate(user);
@@ -34,8 +34,12 @@ export function login(email: string, password: string): Promise<any> {
     });        
 }
 
-function findUser(email: string): Promise<any> {
+function findUserByEmail(email: string): Promise<any> {
     return db.querySingle("select * from customer where email=?",[email]).then(res => res[0]);
+}
+
+export function findUserById(id: number): Promise<any> {
+    return db.querySingle("select * from customer where id=?",[id]).then(res => res[0]);
 }
 
 function insertUser(user: any): Promise<any> {
@@ -43,13 +47,13 @@ function insertUser(user: any): Promise<any> {
 }
 
 function readAndAuthenticate(email: string): Promise<any> {
-    return findUser(email).then(user => authenticate(user));
+    return findUserByEmail(email).then(user => authenticate(user));
 }
 
 function authenticate(user): any {
     user.roles = user.roles.split(','); // roles as array
     delete user.password;
-    let token = auth.createToken(user);
+    let token = jwtauth.createToken(user);
     return {token:token};
 }
 
