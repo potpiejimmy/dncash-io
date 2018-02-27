@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from "../business/access";
-import * as Devices from "../business/devices";
+import * as Device from "../business/device";
 
 export const routerAdminV1: Router = Router();
 
@@ -48,7 +48,7 @@ routerAdminV1.delete("/access/:id", function (request: Request, response: Respon
  * Returns all devices for the authenticated user
  */
 routerAdminV1.get("/devices", function (request: Request, response: Response, next: NextFunction) {
-    Devices.findByCustomer(request.user)
+    Device.findByCustomer(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
@@ -57,7 +57,7 @@ routerAdminV1.get("/devices", function (request: Request, response: Response, ne
  * Deletes the given device for the authenticated user
  */
 routerAdminV1.delete("/devices/:id", function (request: Request, response: Response, next: NextFunction) {
-    Devices.deleteByCustomerAndId(request.user, request.params.id)
+    Device.deleteByCustomerAndId(request.user, request.params.id)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

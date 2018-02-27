@@ -34,12 +34,12 @@ app.use(function(req, res, next) {
   
 app.get('/', (req, res) => res.send('dncash.io is running.'))
 
-// verifies the jwt for protected API routes
-let verifyTokenMiddleware = jwtauth.verifyToken();
-
 // Routes:
-app.use("/dnapi/admin/v1", routerAdminV1Auth); // unsecured
-app.use("/dnapi/admin/v1", verifyTokenMiddleware, routerAdminV1);
+// unsecured route without middleware for authentication:
+app.use("/dnapi/admin/v1", routerAdminV1Auth);
+// JWT secured route for Admin API (web frontend)
+app.use("/dnapi/admin/v1", jwtauth.verifyToken(), routerAdminV1);
+// High-security route for Token API using DB-verified access secret:
 app.use("/dnapi/token/v1", apiauth.verifyAccess, apiauth.verifyTokenApi, apiauth.verifyCustomer, tokenApiV1);
 
 if (app.get('env') === 'production') {
