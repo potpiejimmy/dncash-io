@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from "../business/access";
+import * as Devices from "../business/devices";
 
 export const routerAdminV1: Router = Router();
 
@@ -15,7 +16,7 @@ routerAdminV1.post("/access", function (request: Request, response: Response, ne
 });
 
 /*
- * Returns all API keys for given user (does not include secret)
+ * Returns all API keys for the authenticated user (does not include secret)
  */
 routerAdminV1.get("/access", function (request: Request, response: Response, next: NextFunction) {
     Access.findByCustomerAndScope(request.user, request.query.scope)
@@ -33,10 +34,21 @@ routerAdminV1.put("/access/:id", function (request: Request, response: Response,
 });
 
 /*
- * Delete given API key for given user
+ * Delete given API key the authenticated user
  */
 routerAdminV1.delete("/access/:id", function (request: Request, response: Response, next: NextFunction) {
     Access.deleteByCustomerAndId(request.user, request.params.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------ devices ------------------------
+
+/*
+ * Returns all devices for the authenticated user
+ */
+routerAdminV1.get("/devices", function (request: Request, response: Response, next: NextFunction) {
+    Devices.findByCustomer(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
