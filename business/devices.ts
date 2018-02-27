@@ -28,6 +28,10 @@ export function findByCustomer(customer: any): Promise<any> {
     return db.querySingle("select * from customer_device where customer_id=?", [customer.id]);
 }
 
+export function deleteByCustomerAndId(customer: any, id: number): Promise<any> {
+    return db.querySingle("delete from customer_device where customer_id=? and id=?", [customer.id, id]);
+}
+
 function insertNew(device: any): Promise<any> {
     return db.querySingle("insert into customer_device set ?", [device]);
 }

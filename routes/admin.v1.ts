@@ -52,3 +52,12 @@ routerAdminV1.get("/devices", function (request: Request, response: Response, ne
     .then(res => response.json(res))
     .catch(err => next(err));
 });
+
+/*
+ * Deletes the given device for the authenticated user
+ */
+routerAdminV1.delete("/devices/:id", function (request: Request, response: Response, next: NextFunction) {
+    Devices.deleteByCustomerAndId(request.user, request.params.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
