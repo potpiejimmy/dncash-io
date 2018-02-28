@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `customer_device` (
   `customer_id` INT NOT NULL,
   `uuid` VARCHAR(36) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT NOW(),
+  `type` ENUM('MOBILE', 'ATM', 'CASH_REGISTER', 'OTHER') NOT NULL DEFAULT 'MOBILE',
   `pubkey` VARCHAR(1024) NULL,
   `algorithm` VARCHAR(45) NULL,
   `info` VARCHAR(255) NULL,
@@ -77,6 +78,9 @@ CREATE TABLE IF NOT EXISTS `token` (
   `owner_device_id` INT NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `updated` TIMESTAMP NULL,
+  `type` ENUM('CASHOUT', 'CASHIN', 'PAYMENT', 'OTHER') NOT NULL DEFAULT 'CASHOUT',
+  `code_type` TINYINT NOT NULL DEFAULT 0,
+  `plain_code` VARCHAR(32) NULL,
   `secure_code` VARCHAR(1024) NOT NULL,
   `amount` DECIMAL(13,4) NOT NULL,
   `symbol` VARCHAR(5) NOT NULL,
@@ -86,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   PRIMARY KEY (`id`),
   INDEX `fk_token_customer1_idx` (`owner_id` ASC),
   INDEX `fk_token_customer_device1_idx` (`owner_device_id` ASC),
+  UNIQUE INDEX `plain_code_UNIQUE` (`plain_code` ASC),
   CONSTRAINT `fk_token_customer1`
     FOREIGN KEY (`owner_id`)
     REFERENCES `customer` (`id`)
