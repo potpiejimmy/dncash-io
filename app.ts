@@ -7,18 +7,23 @@
  * @author thorsten.liese@dieboldnixdorf.com
  */
 import * as express from 'express';
+import * as expressWs from 'express-ws';
 import { json } from 'body-parser';
 import * as nocache from 'nocache';
 
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
 
+const app: express.Application = express();
+
+// enable web sockets for express (do this before loading routes)
+expressWs(app);
+
 // Routes:
 import { routerAdminV1Auth } from "./routes/admin.v1.auth";
 import { routerAdminV1 } from "./routes/admin.v1";
+import { routerAdminV1Ws } from "./routes/admin.v1.ws";
 import { tokenApiV1 } from "./routes/tokenapi.v1";
-
-const app: express.Application = express();
 
 app.use(nocache());
 app.use(json());
@@ -41,6 +46,9 @@ app.use("/dnapi/admin/v1", routerAdminV1Auth);
 app.use("/dnapi/admin/v1", jwtauth.verifyToken(), routerAdminV1);
 // High-security route for Token API using DB-verified access secret:
 app.use("/dnapi/token/v1", apiauth.verifyAccess, apiauth.verifyTokenApi, apiauth.verifyCustomer, tokenApiV1);
+
+// WebSocket routes (unsecured)
+app.use("/dnapi/adminws/v1", routerAdminV1Ws);
 
 if (app.get('env') === 'production') {
     app.set('trust proxy', 1) // trust first proxy, allows sending secure cookies even if SSL terminated on proxy  

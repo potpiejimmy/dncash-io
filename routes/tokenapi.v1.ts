@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Device from "../business/device";
 import * as Token from "../business/token";
+import { tokenChangeNotifier } from "../util/notifier";
 
 export const tokenApiV1: Router = Router();
 
@@ -23,7 +24,10 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
  */
 tokenApiV1.post("/tokens", function (request: Request, response: Response, next: NextFunction) {
     Token.createToken(request.user, request.body)
-    .then(res => response.json(res))
+    .then(res => {
+        tokenChangeNotifier.notifyObservers(request.user.id);
+        response.json(res);
+    })
     .catch(err => next(err));
 });
 
@@ -48,6 +52,9 @@ tokenApiV1.get("/tokens", function (request: Request, response: Response, next: 
  */
 tokenApiV1.delete("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
     Token.deleteByDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid)
-    .then(res => response.json(res))
+    .then(res => {
+        tokenChangeNotifier.notifyObservers(request.user.id);
+        response.json(res);
+    })
     .catch(err => next(err));
 });
