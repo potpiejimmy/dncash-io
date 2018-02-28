@@ -29,7 +29,7 @@ export function createToken(customer: any, token: any): Promise<any> {
 export function findByDeviceUUID(customer: any, uid: string): Promise<any> {
     return Device.findByCustomerAndUUID(customer, uid).then(device => {
         if (!device) return [];
-        return db.querySingle("select * from token where owner_device_id=?", [device.id]);
+        return db.querySingle("select * from token where owner_device_id=? and state='OPEN'", [device.id]);
     });
 }
 
@@ -40,8 +40,12 @@ export function findByCustomer(customer: any): Promise<any> {
 export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: string): Promise<any> {
     return Device.findByCustomerAndUUID(customer, device_uuid).then(device => {
         if (!device) return;
-        return db.querySingle("delete from token where owner_device_id=? and uuid=?", [device.id, uid]);
+        return db.querySingle("update token set state='DELETED' where owner_device_id=? and uuid=?", [device.id, uid]);
     });
+}
+
+export function getStatistics(customer: any): Promise<any> {
+    return db.querySingle("select state, type, sum(amount) from token where owner_id=? group by state, type", [customer.id]);
 }
 
 function insertNew(token: any): Promise<number> {
