@@ -29,7 +29,7 @@ export function findByCustomer(customer: any): Promise<any> {
 }
 
 export function findByCustomerAndUUID(customer: any, uid: string): Promise<any> {
-    return db.querySingle("select * from customer_device where customer_id=? and uuid=?", [customer.id, uid]);
+    return db.querySingle("select * from customer_device where customer_id=? and uuid=?", [customer.id, uid]).then(res => res[0]);
 }
 
 export function deleteByCustomerAndId(customer: any, id: number): Promise<any> {
