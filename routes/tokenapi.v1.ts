@@ -43,11 +43,11 @@ tokenApiV1.get("/tokens", function (request: Request, response: Response, next: 
 });
 
 /*
- * Deletes a single token with the given ID.
- * Note: You must specify the corresponding device_uuid as a query parameter (for security reasons)
+ * Deletes a single token with the given UUID.
+ * Note: You must also specify the corresponding device_uuid as a query parameter (for security reasons)
  */
-tokenApiV1.delete("/tokens/:id", function (request: Request, response: Response, next: NextFunction) {
-    Token.deleteByDeviceAndId(request.user, request.query.device_uuid, request.params.id)
+tokenApiV1.delete("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Token.deleteByDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

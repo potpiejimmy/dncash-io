@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS `customer_device` (
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_customer_device_customer1_idx` (`customer_id` ASC),
+  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC),
   CONSTRAINT `fk_customer_device_customer1`
     FOREIGN KEY (`customer_id`)
     REFERENCES `customer` (`id`)
@@ -76,6 +77,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `owner_id` INT NOT NULL,
   `owner_device_id` INT NOT NULL,
+  `uuid` VARCHAR(36) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `updated` TIMESTAMP NULL,
   `type` ENUM('CASHOUT', 'CASHIN', 'PAYMENT', 'OTHER') NOT NULL DEFAULT 'CASHOUT',
@@ -91,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   INDEX `fk_token_customer1_idx` (`owner_id` ASC),
   INDEX `fk_token_customer_device1_idx` (`owner_device_id` ASC),
   UNIQUE INDEX `plain_code_UNIQUE` (`plain_code` ASC),
+  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC),
   CONSTRAINT `fk_token_customer1`
     FOREIGN KEY (`owner_id`)
     REFERENCES `customer` (`id`)
