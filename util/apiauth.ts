@@ -13,8 +13,11 @@ export function verifyAccess(request: Request, response: Response, next: NextFun
 
 export function verifyTokenApi(request: Request, response: Response, next: NextFunction) {
     if (request.method == 'OPTIONS') return next();
-    if (!request.access || request.access.scope != 'token-api') return next("Invalid API access key");
-    next();
+    if (!request.access || request.access.scope != 'token-api') {
+        response.status(401).json({error:"Invalid API access key or secret"});
+    } else {
+        return next();
+    }
 }
 
 export function verifyCustomer(request: Request, response: Response, next: NextFunction) {

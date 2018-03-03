@@ -10,11 +10,15 @@ import * as express from 'express';
 import * as expressWs from 'express-ws';
 import { json } from 'body-parser';
 import * as nocache from 'nocache';
+import * as swagger from './util/swagger';
 
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
 
 const app: express.Application = express();
+
+// Build and server swagger UI API docs:
+swagger.setup(app);
 
 // enable web sockets for express (do this before loading routes)
 expressWs(app);
