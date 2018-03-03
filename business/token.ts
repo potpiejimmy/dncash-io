@@ -14,14 +14,15 @@ export function createToken(customer: any, token: any): Promise<any> {
         return findByUUID(uid).then(found => {
             if (found) return createToken(customer, token); // try again
 
+            delete token.id;
             delete token.device_uuid;
             token.uuid = uid;
             token.owner_id = customer.id;
             token.owner_device_id = device.id;
             let code = crypto.randomBytes(config.DEFAULT_CODE_LEN);
             token.secure_code = crypto.publicEncrypt(device.pubkey, code).toString('base64');
-
-            return insertNew(token).then(id => findById(id));
+            token.info = JSON.stringify(token.info); // save info data as string
+            return insertNew(token).then(id => findById(id)).then(t => exportToken(t));
         });
     });
 }
@@ -29,12 +30,12 @@ export function createToken(customer: any, token: any): Promise<any> {
 export function findByDeviceUUID(customer: any, uid: string): Promise<any> {
     return Device.findByCustomerAndUUID(customer, uid).then(device => {
         if (!device) return [];
-        return db.querySingle("select * from token where owner_device_id=? and state='OPEN'", [device.id]);
+        return db.querySingle("select * from token where owner_device_id=? and state='OPEN'", [device.id]).then(res => exportTokens(res));
     });
 }
 
 export function findByCustomer(customer: any): Promise<any> {
-    return db.querySingle("select * from token where owner_id=?", [customer.id]);
+    return db.querySingle("select * from token where owner_id=?", [customer.id]).then(res => exportTokens(res));
 }
 
 export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: string): Promise<any> {
@@ -46,6 +47,20 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
 
 export function getStatistics(customer: any): Promise<any> {
     return db.querySingle("select state, type, sum(amount) from token where owner_id=? group by state, type", [customer.id]);
+}
+
+function exportTokens(tokens: Array<any>): Array<any> {
+    tokens.forEach(i => exportToken(i));
+    return tokens;
+}
+
+function exportToken(token: any): any {
+    // converts a DB token into its outside-world representation:
+    delete token.id;
+    delete token.owner_id;
+    delete token.owner_device_id;
+    token.info = JSON.parse(token.info);
+    return token;
 }
 
 function insertNew(token: any): Promise<number> {
