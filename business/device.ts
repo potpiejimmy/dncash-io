@@ -12,12 +12,18 @@ export function register(customer: any, device: any): Promise<any> {
         let newDevice = {
             customer_id: customer.id,
             uuid: uid,
-            pubkey: device.pubkey
+            pubkey: device.pubkey,
+            type: device.type,
+            info: JSON.stringify(device.info)
         };
 
         // insert and re-read from db
         return insertNew(newDevice).then(() => findByUUID(uid));
     });
+}
+
+export function findById(id: number): Promise<any> {
+    return db.querySingle("select * from customer_device where id=?", [id]).then(res => res[0]);
 }
 
 export function findByUUID(uid: string): Promise<any> {

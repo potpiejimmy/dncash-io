@@ -49,6 +49,34 @@ export function getStatistics(customer: any): Promise<any> {
     return db.querySingle("select state, type, sum(amount) from token where owner_id=? group by state, type", [customer.id]);
 }
 
+export function verifyAndLock(customer: any, device_uuid: string, radio_code: string): Promise<any> {
+    // Radio Code V.1: 36 characters token UUID + decrypted secure code in hex
+    let token_uuid = radio_code.substring(0,36);
+    let code = new Buffer(radio_code.substring(36), 'hex');
+
+    // first, make sure the verifying cash device is allowed for the current user credentials
+    return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
+        if (!cashDevice) throw "Cash device with UUID " + device_uuid + " not found.";
+
+        // next, look up the token to find the associated token device
+        return findByUUID(token_uuid).then(token => {
+            if (!token) throw "Token not found";
+
+            // fetch the token device with its associated public key:
+            return Device.findById(token.owner_device_id).then(tokenDevice => {
+                if (token.secure_code != crypto.publicEncrypt(tokenDevice.pubkey, code).toString('base64')) throw "Invalid token code.";
+
+                // okay, verified, now try to lock the token:
+                return atomicLockToken(token.id).then(success => {
+                    if (!success) throw "Token not in open state.";
+                    // TODO: ournalize / connect for clearing
+                    return token;
+                })
+            })
+        });
+    });
+}
+
 function exportTokens(tokens: Array<any>): Array<any> {
     tokens.forEach(i => exportToken(i));
     return tokens;
@@ -73,4 +101,8 @@ function findById(id: number): Promise<any> {
 
 function findByUUID(uid: string): Promise<any> {
     return db.querySingle("select * from token where uuid=?", [uid]).then(res => res[0]);
+}
+
+function atomicLockToken(id: number): Promise<boolean> {
+    return db.querySingle("update token set state='LOCKED' where id=? and state='OPEN'").then(res => res.affectedRows);
 }

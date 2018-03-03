@@ -19,6 +19,8 @@ const app: express.Application = express();
 
 // Build and server swagger UI API docs:
 swagger.setup(app);
+// and prevent favicon 404:
+app.get('/favicon.ico', (req, res) => res.status(204));
 
 // enable web sockets for express (do this before loading routes)
 expressWs(app);
@@ -28,6 +30,7 @@ import { routerAdminV1Auth } from "./routes/admin.v1.auth";
 import { routerAdminV1 } from "./routes/admin.v1";
 import { routerAdminV1Ws } from "./routes/admin.v1.ws";
 import { tokenApiV1 } from "./routes/tokenapi.v1";
+import { cashApiV1 } from "./routes/cashapi.v1";
 
 app.use(nocache());
 app.use(json());
@@ -41,7 +44,8 @@ app.use(function(req, res, next) {
     next();
 });
   
-app.get('/', (req, res) => res.send('dncash.io is running.'))
+app.get('/', (req, res) => res.send('dncash.io is running on /dnapi.'))
+app.get('/dnapi', (req, res) => res.send('<a href="docs">API Docs</a>'));
 
 // Routes:
 // unsecured route without middleware for authentication:
@@ -50,6 +54,8 @@ app.use("/dnapi/admin/v1", routerAdminV1Auth);
 app.use("/dnapi/admin/v1", jwtauth.verifyToken(), routerAdminV1);
 // High-security route for Token API using DB-verified access secret:
 app.use("/dnapi/token/v1", apiauth.verifyAccess, apiauth.verifyTokenApi, apiauth.verifyCustomer, tokenApiV1);
+// High-security route for Cash API using DB-verified access secret:
+app.use("/dnapi/cash/v1", apiauth.verifyAccess, apiauth.verifyCashApi, apiauth.verifyCustomer, cashApiV1);
 
 // WebSocket routes (unsecured)
 app.use("/dnapi/adminws/v1", routerAdminV1Ws);

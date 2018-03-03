@@ -12,12 +12,11 @@ export function verifyAccess(request: Request, response: Response, next: NextFun
 }
 
 export function verifyTokenApi(request: Request, response: Response, next: NextFunction) {
-    if (request.method == 'OPTIONS') return next();
-    if (!request.access || request.access.scope != 'token-api') {
-        response.status(401).json({error:"Invalid API access key or secret"});
-    } else {
-        return next();
-    }
+    return verifyApi(request, response, next, 'token-api');
+}
+
+export function verifyCashApi(request: Request, response: Response, next: NextFunction) {
+    return verifyApi(request, response, next, 'cash-api');
 }
 
 export function verifyCustomer(request: Request, response: Response, next: NextFunction) {
@@ -26,4 +25,14 @@ export function verifyCustomer(request: Request, response: Response, next: NextF
         request.user = user;
         next();
     });
+}
+
+function verifyApi(request: Request, response: Response, next: NextFunction, scope: string) {
+    if (request.method == 'OPTIONS') return next();
+    if (!request.access || request.access.scope != scope) {
+        response.status(401).json({error:"Invalid API access key or secret"});
+        return null;
+    } else {
+        return next();
+    }
 }

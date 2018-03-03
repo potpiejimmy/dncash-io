@@ -5,10 +5,10 @@ import * as swaggerJSDoc from 'swagger-jsdoc';
 export function setup(app: any): void {
     var options = {
         swaggerDefinition: {
-        info: {
-            title: 'dncash.io', // Title (required) 
-            version: '1.0.0', // Version (required) 
-        },
+            info: {
+                title: 'dncash.io', // Title (required) 
+                version: '1.0.0' // Version (required) 
+            },
         },
         apis: ['./routes/*'], // Path to the API docs 
     };
@@ -16,11 +16,13 @@ export function setup(app: any): void {
     var swaggerSpec = swaggerJSDoc(options); // line 36 
     
     // ... 
-    app.get('/dnapi/api-docs.json', function(req, res) { // line 41 
+    app.get('/dnapi/docs.json', function(req, res) { // line 41 
         res.setHeader('Content-Type', 'application/json');
         res.send(swaggerSpec);
     });
     
     // ... 
-    app.use('/dnapi/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec)); // line 45 
+    app.use('/dnapi/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, {
+        swaggerOptions: {docExpansion: 'none'}
+    })); // line 45 
 }

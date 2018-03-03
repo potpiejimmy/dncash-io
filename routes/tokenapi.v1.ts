@@ -23,8 +23,30 @@ export const tokenApiV1: Router = Router();
  *          type: string
  *          description: PEM encoded public key
  *          required: true
- *          example: -----BEGIN RSA PUBLIC KEY-----↵MIIBCgKCAQEA.....
+ *          example: -----BEGIN RSA PUBLIC KEY-----↵MIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ.....
+ *        info:
+ *          type: object
+ *          description: generic custom JSON data
+ *          example: {anyKey: "anyValue"}
  *   device_response:
+ *      type: object
+ *      properties:
+ *        uuid:
+ *          type: string
+ *          description: a new, unique device UUID generated for the new device
+ *   cash_device_request:
+ *      type: object
+ *      properties:
+ *        type:
+ *          type: string
+ *          description: cash device type, defaults to 'ATM' if not specified
+ *          example: ATM
+ *          enum: [ATM,CASH_REGISTER,OTHER]
+ *        info:
+ *          type: object
+ *          description: generic custom JSON data
+ *          example: {anyKey: "anyValue, e.g ATM workstation ID"}
+ *   cash_device_response:
  *      type: object
  *      properties:
  *        uuid:
@@ -89,6 +111,11 @@ export const tokenApiV1: Router = Router();
  *          type: string
  *          enum: [CASHOUT,CASHIN]
  *          example: CASHOUT
+ *        state:
+ *          type: string
+ *          description: token state
+ *          enum: [OPEN,DELETED,LOCKED,COMPLETED,FAILED,EXPIRED,CLEARED,CANCELED,REJECTED]
+ *          example: OPEN
  *        info:
  *          $ref: '#/definitions/token_info'
  */
@@ -99,8 +126,8 @@ export const tokenApiV1: Router = Router();
  * @swagger
  * /dnapi/token/v1/devices:
  *   post:
- *     summary: Registers a new device
- *     description: Registers a new device
+ *     summary: Registers a new token device
+ *     description: Registers a new token device
  *     tags:
  *       - Token API
  *     produces:
@@ -133,6 +160,7 @@ export const tokenApiV1: Router = Router();
  *           $ref: '#/definitions/unauthorized'
  */
 tokenApiV1.post("/devices", function (request: Request, response: Response, next: NextFunction) {
+    if (!request.body.type) request.body.type='MOBILE'; // default to MOBILE
     Device.register(request.user, request.body)
     .then(res => response.json(res))
     .catch(err => next(err));
