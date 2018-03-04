@@ -45,7 +45,7 @@ app.use(function(req, res, next) {
 });
   
 app.get('/', (req, res) => res.send('dncash.io is running on /dnapi.'))
-app.get('/dnapi', (req, res) => res.send('<a href="docs">API Docs</a>'));
+app.get('/dnapi', (req, res) => res.send('<a href="/dnapi/docs">API Docs</a>'));
 
 // Routes:
 // unsecured route without middleware for authentication:

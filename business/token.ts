@@ -17,8 +17,10 @@ export function createToken(customer: any, token: any): Promise<any> {
         return findByUUID(uid).then(found => {
             if (found) return createToken(customer, token); // try again
 
-            delete token.id;
             delete token.device_uuid;
+            delete token.id;
+            delete token.lock_device_id;
+            delete token.state;
             token.uuid = uid;
             token.owner_id = customer.id;
             token.owner_device_id = device.id;
@@ -73,15 +75,34 @@ export function verifyAndLock(customer: any, device_uuid: string, radio_code: st
                 if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
 
                 // okay, verified, now try to lock the token:
-                return atomicLockToken(token.id).then(success => {
-                    if (!success) throw "Token not in open state.";
-
+                return atomicLockToken(token.id, cashDevice.id).then(success => {
+                    if (!success) throw "Token not in OPEN state.";
                     tokenChangeNotifier.notifyObservers(token.owner_id);
-                    // TODO: journalize / connect for clearing
-                    return exportToken(token);
-                })
+                    // re-read and export:
+                    return findById(token.id).then(t => exportToken(t));    
+                });
             })
         });
+    });
+}
+
+export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, uid: string, newData: any): Promise<any> {
+    return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
+        if (!cashDevice) throw "Cash device with UUID " + device_uuid + " not found.";
+        return findByUUID(uid).then(token => {
+            if (!token) throw "Token not found";
+            // make sure the updater is the same as the locker
+            if (token.lock_device_id != cashDevice.id) throw "Sorry, token was locked by another device";
+            
+            // right now, we only support updating of the state
+            if (!(['COMPLETED','CANCELED','FAILED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED allowed.";
+            return updateLockedToken(token.id, newData.state).then(success => {
+                if (!success) throw "Token not in LOCKED state.";
+                tokenChangeNotifier.notifyObservers(token.owner_id);
+                // re-read and export:
+                return findById(token.id).then(t => exportToken(t));    
+            });
+        });        
     });
 }
 
@@ -118,6 +139,7 @@ function exportToken(token: any): any {
     delete token.id;
     delete token.owner_id;
     delete token.owner_device_id;
+    delete token.lock_device_id;
     token.info = JSON.parse(token.info);
     return token;
 }
@@ -134,6 +156,10 @@ function findByUUID(uid: string): Promise<any> {
     return db.querySingle("select * from token where uuid=?", [uid]).then(res => res[0]);
 }
 
-function atomicLockToken(id: number): Promise<boolean> {
-    return db.querySingle("update token set state='LOCKED' where id=? and state='OPEN'",[id]).then(res => res.affectedRows);
+function atomicLockToken(id: number, cashDeviceId: number): Promise<boolean> {
+    return db.querySingle("update token set state='LOCKED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
+}
+
+function updateLockedToken(id: number, newState: string): Promise<boolean> {
+    return db.querySingle("update token set state=?,updated=? where id=? and state='LOCKED'", [newState,new Date(),id]).then(res => res.affectedRows);
 }

@@ -41,6 +41,14 @@ export const tokenApiV1: Router = Router();
  *          description: cash device type, defaults to 'ATM' if not specified
  *          example: ATM
  *          enum: [ATM,CASH_REGISTER,OTHER]
+ *        lat:
+ *          type: number
+ *          description: latitude decimal value
+ *          example: 50.043858
+ *        lon:
+ *          type: number
+ *          description: longitude decimal value
+ *          example: 8.679574
  *        info:
  *          type: object
  *          description: generic custom JSON data
@@ -73,7 +81,7 @@ export const tokenApiV1: Router = Router();
  *         type: string
  *         description: Any other custom value
  *         example: Any value
- *   token_request:
+ *   token_create:
  *      type: object
  *      properties:
  *        device_uuid:
@@ -91,6 +99,14 @@ export const tokenApiV1: Router = Router();
  *          example: CASHOUT
  *        info:
  *          $ref: '#/definitions/token_info'
+ *   token_update:
+ *      type: object
+ *      properties:
+ *        state:
+ *          type: string
+ *          description: token state
+ *          enum: [COMPLETED,FAILED,CANCELED]
+ *          example: COMPLETED
  *   token_response:
  *      type: object
  *      properties:
@@ -194,7 +210,7 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
  *         required: true
  *         in: body
  *         schema:
- *           $ref: '#/definitions/token_request'
+ *           $ref: '#/definitions/token_create'
  *     responses:
  *       200:
  *         description: Returns new token

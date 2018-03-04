@@ -14,6 +14,8 @@ export function register(customer: any, device: any): Promise<any> {
             uuid: uid,
             pubkey: device.pubkey,
             type: device.type,
+            lat: device.lat,
+            lon: device.lon,
             info: JSON.stringify(device.info)
         };
 

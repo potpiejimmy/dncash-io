@@ -105,3 +105,61 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
         response.status(403).json({error:err});
     });
 });
+
+/**
+ * @swagger
+ * /dnapi/cash/v1/tokens/{uuid}:
+ *   put:
+ *     summary: Confirms a token
+ *     description: Updates the given token, thus notifiying the server about succesful or failed cash processing.
+ *                  You must specify the cash device UUID as a query parameter.
+ *                  Tokens can only be updated by devices that have succesfully transfered the token into the locked state before.
+ *                  Only the token state can be updated, and only from state LOCKED to one of COMPLETED, FAILED, CANCELED.
+ *     tags:
+ *       - Cash API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Cash API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Cash API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: uuid
+ *         description: The token UUID
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: device_uuid
+ *         description: The cash device UUID that has locked the token
+ *         in: query
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Token update data
+ *         required: true
+ *         in: body
+ *         schema:
+ *           $ref: '#/definitions/token_update'
+ *     responses:
+ *       200:
+ *         description: Returns updated token
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/token_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Token.updateByLockDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid, request.body)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});

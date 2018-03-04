@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS `customer_device` (
   `type` ENUM('MOBILE', 'ATM', 'CASH_REGISTER', 'OTHER') NOT NULL DEFAULT 'MOBILE',
   `pubkey` VARCHAR(1024) NULL,
   `algorithm` VARCHAR(45) NULL,
+  `lat` DECIMAL(10,8) NULL,
+  `lon` DECIMAL(11,8) NULL,
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_customer_device_customer1_idx` (`customer_id` ASC),
@@ -72,6 +74,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `owner_id` INT NOT NULL,
   `owner_device_id` INT NOT NULL,
+  `lock_device_id` INT NULL,
   `uuid` VARCHAR(36) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT NOW(),
   `updated` TIMESTAMP NULL,
@@ -89,6 +92,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   INDEX `fk_token_customer_device1_idx` (`owner_device_id` ASC),
   UNIQUE INDEX `plain_code_UNIQUE` (`plain_code` ASC),
   UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC),
+  INDEX `fk_token_customer_device2_idx` (`lock_device_id` ASC),
   CONSTRAINT `fk_token_customer1`
     FOREIGN KEY (`owner_id`)
     REFERENCES `customer` (`id`)
@@ -96,6 +100,11 @@ CREATE TABLE IF NOT EXISTS `token` (
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_token_customer_device1`
     FOREIGN KEY (`owner_device_id`)
+    REFERENCES `customer_device` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_token_customer_device2`
+    FOREIGN KEY (`lock_device_id`)
     REFERENCES `customer_device` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
