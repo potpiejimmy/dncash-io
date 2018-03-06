@@ -94,13 +94,16 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
             // make sure the updater is the same as the locker
             if (token.lock_device_id != cashDevice.id) throw "Sorry, token was locked by another device";
             
-            // right now, we only support updating of the state
+            // right now, we only support updating of the state and/or amount
             if (!(['COMPLETED','CANCELED','FAILED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED allowed.";
-            return updateLockedToken(token.id, newData.state).then(success => {
+            if (!newData.amount) newData.amount = token.amount;
+            if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
+
+            return updateLockedToken(token.id, newData.state, newData.amount).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
                 tokenChangeNotifier.notifyObservers(token.owner_id);
                 // re-read and export:
-                return findById(token.id).then(t => exportToken(t));    
+                return findById(token.id).then(t => exportToken(t));
             });
         });        
     });
@@ -160,6 +163,6 @@ function atomicLockToken(id: number, cashDeviceId: number): Promise<boolean> {
     return db.querySingle("update token set state='LOCKED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
-function updateLockedToken(id: number, newState: string): Promise<boolean> {
-    return db.querySingle("update token set state=?,updated=? where id=? and state='LOCKED'", [newState,new Date(),id]).then(res => res.affectedRows);
+function updateLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {
+    return db.querySingle("update token set state=?,amount=?,updated=? where id=? and state='LOCKED'", [newState,newAmount,new Date(),id]).then(res => res.affectedRows);
 }

@@ -23,6 +23,10 @@ export const tokenApiV1: Router = Router();
  *          description: PEM encoded public key
  *          required: true
  *          example: -----BEGIN RSA PUBLIC KEY-----↵MIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ.....
+ *        refname:
+ *          type: string
+ *          description: optional custom reference name
+ *          example: Device reference name
  *        info:
  *          type: object
  *          description: generic custom JSON data
@@ -49,10 +53,14 @@ export const tokenApiV1: Router = Router();
  *          type: number
  *          description: longitude decimal value
  *          example: 8.679574
+ *        refname:
+ *          type: string
+ *          description: optional custom reference name
+ *          example: Device reference name, e.g. terminal ID
  *        info:
  *          type: object
  *          description: generic custom JSON data
- *          example: {anyKey: "anyValue, e.g ATM workstation ID"}
+ *          example: {anyKey: "anyValue"}
  *   cash_device_response:
  *      type: object
  *      properties:
@@ -71,8 +79,8 @@ export const tokenApiV1: Router = Router();
  *           properties:
  *             d:
  *               type: number
- *               description: denomination value in whole symbols
- *               example: 50
+ *               description: denomination value in smallest symbol units (e.g. cents)
+ *               example: 5000
  *             c:
  *               type: number
  *               description: note count
@@ -89,14 +97,20 @@ export const tokenApiV1: Router = Router();
  *          example: '916eb12e-4e8a-4833-8e78-be40115829e7'
  *        amount:
  *          type: number
- *          example: 100
+ *          description: amount in smallest symbol units (e.g. cents)
+ *          example: 10000
  *        symbol:
  *          type: string
+ *          description: the currency symbol
  *          example: EUR
  *        type:
  *          type: string
  *          enum: [CASHOUT,CASHIN]
  *          example: CASHOUT
+ *        refname:
+ *          type: string
+ *          description: custom reference name or number
+ *          example: bookref_08154711
  *        info:
  *          $ref: '#/definitions/token_info'
  *   token_update:
@@ -107,6 +121,10 @@ export const tokenApiV1: Router = Router();
  *          description: token state
  *          enum: [COMPLETED,FAILED,CANCELED]
  *          example: COMPLETED
+ *        amount:
+ *          type: number
+ *          description: actual amount dispensed or deposited in smallest symbol units (cents)
+ *          example: 9750
  *   token_response:
  *      type: object
  *      properties:
@@ -118,9 +136,11 @@ export const tokenApiV1: Router = Router();
  *          description: Secure code encrypted with device public key
  *        amount:
  *          type: number
- *          example: 100
+ *          description: amount in smallest symbol units (e.g. cents for EUR symbol)
+ *          example: 10000
  *        symbol:
  *          type: string
+ *          description: the currency symbol
  *          example: EUR
  *        type:
  *          type: string
@@ -142,7 +162,8 @@ export const tokenApiV1: Router = Router();
  * /dnapi/token/v1/devices:
  *   post:
  *     summary: Registers a new token device
- *     description: Registers a new token device
+ *     description: Registers a new token device. To register a new token device, a PEM-encoded 
+ *                  RSA public key needs to be included in the request.
  *     tags:
  *       - Token API
  *     produces:
