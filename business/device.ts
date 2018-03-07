@@ -45,6 +45,11 @@ export function deleteByCustomerAndId(customer: any, id: number): Promise<any> {
     return db.querySingle("delete from customer_device where customer_id=? and id=?", [customer.id, id]);
 }
 
+export function getAdminDeviceStatistics(customer: any): Promise<any> {
+    if (!customer.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return db.querySingle("select c.email,d.type,d.refname from customer c join customer_device d on d.customer_id=c.id");
+}
+
 function insertNew(device: any): Promise<any> {
     return db.querySingle("insert into customer_device set ?", [device]);
 }

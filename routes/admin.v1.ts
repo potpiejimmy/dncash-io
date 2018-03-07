@@ -66,10 +66,18 @@ routerAdminV1.delete("/devices/:id", function (request: Request, response: Respo
 // ------- statistics ---------------
 
 /*
- * Returns all devices for the authenticated user
+ * Returns token statistics for the authenticated user
  */
 routerAdminV1.get("/tokenstat", function (request: Request, response: Response, next: NextFunction) {
     Token.getStatistics(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------- system admin only (role admin) ---------------
+
+routerAdminV1.get("/admin/devicestat", function (request: Request, response: Response, next: NextFunction) {
+    Device.getAdminDeviceStatistics(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

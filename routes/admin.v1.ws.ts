@@ -17,4 +17,8 @@ routerAdminV1Ws.ws("/tokenchange/:id", function (ws: WebSocket, req: Request) {
             tokenChangeNotifier.removeObserver(req.params.id, wsid);
         }
     });
+    ws.onclose = () => {
+//        console.log("WS Remove " + wsid);
+        tokenChangeNotifier.removeObserver(req.params.id, wsid);
+    }
 });

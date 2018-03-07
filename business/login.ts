@@ -26,7 +26,6 @@ export function register(user: any): Promise<any> {
 export function login(email: string, password: string): Promise<any> {
     return findUserByEmail(email).then(user => {
         if (user && crypto.createHash('sha256').update(password || '').digest("hex") == user.password) {
-            console.info("Login successful");
             return authenticate(user);
         } else {
             return {"result": "Sorry, wrong user or password."};
