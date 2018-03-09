@@ -57,32 +57,16 @@ export function getStatistics(customer: any): Promise<any> {
 }
 
 export function verifyAndLock(customer: any, device_uuid: string, radio_code: string): Promise<any> {
-    // Radio Code V.1: 36 characters token UUID + decrypted secure code in hex
-    let token_uuid = radio_code.substring(0,36);
-    let code = new Buffer(radio_code.substring(36), 'hex');
-
-    // first, make sure the verifying cash device is allowed for the current user credentials
+    // make sure the verifying cash device is allowed for the current user credentials
     return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
         if (!cashDevice) throw "Cash device with UUID " + device_uuid + " not found.";
+        return verifyAndLockImpl(cashDevice, radio_code);
+    });
+}
 
-        // next, look up the token to find the associated token device
-        return findByUUID(token_uuid).then(token => {
-            if (!token) throw "Token not found";
-
-            // fetch the token device with its associated public key:
-            return Device.findById(token.owner_device_id).then(tokenDevice => {
-                // compare the encrypted token codes:
-                if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
-
-                // okay, verified, now try to lock the token:
-                return atomicLockToken(token.id, cashDevice.id).then(success => {
-                    if (!success) throw "Token not in OPEN state.";
-                    tokenChangeNotifier.notifyObservers(token.owner_id);
-                    // re-read and export:
-                    return findById(token.id).then(t => exportToken(t));    
-                });
-            })
-        });
+export function verifyAndLockByTrigger(device_id: number, radio_code: string): Promise<any> {
+    return Device.findById(device_id).then(cashDevice => {
+        return verifyAndLockImpl(cashDevice, radio_code);
     });
 }
 
@@ -109,6 +93,31 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
     });
 }
 
+function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
+    // Radio Code V.1: 36 characters token UUID + decrypted secure code in hex
+    let token_uuid = radio_code.substring(0,36);
+    let code = new Buffer(radio_code.substring(36), 'hex');
+
+    // look up the token to find the associated token device
+    return findByUUID(token_uuid).then(token => {
+        if (!token) throw "Token not found";
+
+        // fetch the token device with its associated public key:
+        return Device.findById(token.owner_device_id).then(tokenDevice => {
+            // compare the encrypted token codes:
+            if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
+
+            // okay, verified, now try to lock the token:
+            return atomicLockToken(token.id, cashDevice.id).then(success => {
+                if (!success) throw "Token not in OPEN state.";
+                tokenChangeNotifier.notifyObservers(token.owner_id);
+                // re-read and export:
+                return findById(token.id).then(t => exportToken(t));    
+            });
+        })
+    });
+}
+
 /**
  * Returns the public key encrypted token using PKCS1_PADDING 
  * @param pubkey PEM encoded public key
@@ -116,8 +125,12 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
  */
 function encryptTokenCode(pubkey: string, code: Buffer): string {
     // apply non-random PKCS#1-padding so we don't have to
-    // store the plain code in the DB and can just compare
-    // the encrypted code on token verification
+    // store the plain code in the DB and can compare
+    // the encrypted code on token verification.
+    // this does not compromise security as the plain text
+    // itself is a secure random number. this way
+    // we never store the plain code anywhere which greatly
+    // enhances the token security.
 
     // determine key length:
     let keylen = forge.pki.publicKeyFromPem(pubkey).n.toString(16).length/2;

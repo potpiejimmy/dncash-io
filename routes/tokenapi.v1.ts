@@ -162,8 +162,12 @@ export const tokenApiV1: Router = Router();
  * /dnapi/token/v1/devices:
  *   post:
  *     summary: Registers a new token device
- *     description: Registers a new token device. To register a new token device, a PEM-encoded 
- *                  RSA public key needs to be included in the request.
+ *     description: Registers a new token device. To register a new token device, the device's PEM-encoded 
+ *                  RSA public key needs to be included in the request. Note that each token that is created later
+ *                  through the create-token endpoint holds a secure code encrypted with the target device's public
+ *                  key to ensure true end-to-end encryption for scenarios where the calling entity is not the same as
+ *                  the target device (usually banking backends performing account authorization prior
+ *                  to calling the create method).
  *     tags:
  *       - Token API
  *     produces:
@@ -210,7 +214,10 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
  * /dnapi/token/v1/tokens:
  *   post:
  *     summary: Creates a new cash token
- *     description: Creates a new cash token
+ *     description: Creates a new cash token, secured for the given token device. The new token's secure code
+ *                  can only be decrypted on the token device holding the corresponding private key.
+ *                  The token server does not store the original plain code, so that even compromised
+ *                  token data cannot be used by someone else without physical access to the target device.
  *     tags:
  *       - Token API
  *     produces:
@@ -253,7 +260,7 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  * /dnapi/token/v1/tokens:
  *   get:
  *     summary: Get cash tokens
- *     description: Gets all cash tokens for currently authenticated user.
+ *     description: Gets all cash tokens for the currently authenticated user.
  *                  If the query parameter ?device_uuid=... is specified, only tokens for that device are returned.
  *     tags:
  *       - Token API
