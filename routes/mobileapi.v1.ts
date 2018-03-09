@@ -7,7 +7,7 @@ export const mobileApiV1: Router = Router();
  * @swagger
  * /dnapi/mobile/v1/trigger/{triggercode}:
  *   put:
- *     summary: Verifies, locks and directly pushes a token to a cash device without radio or scan capabilities
+ *     summary: Verifies, locks and securely delivers a token to a cash device that has no radio or scanning capabilities
  *     description: This method verifies the given radio code, locks the associated token for
  *                  the cash device waiting on the trigger code endpoint and sends the
  *                  token data to the cash device.

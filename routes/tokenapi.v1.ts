@@ -8,6 +8,16 @@ export const tokenApiV1: Router = Router();
  * Generic definitions for swagger UI
  * 
  * @swagger
+ * tags:
+ *   - name: Token API
+ *     description: The Token API provides restricted operations invoked by authorization entities
+ *                  such as banking backends or secure personal wallets.
+ *   - name: Cash API
+ *     description: The Cash API is used by secure cash devices such as ATMs and cash registers.
+ *   - name: Mobile API
+ *     description: The Mobile API holds operations to be executed from potentially untrusted
+ *                  devices such as mobile phones.
+ * 
  * definitions:
  *   unauthorized:
  *      type: object
