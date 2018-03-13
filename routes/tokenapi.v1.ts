@@ -320,7 +320,8 @@ tokenApiV1.get("/tokens", function (request: Request, response: Response, next: 
  *   delete:
  *     summary: Deletes a token
  *     description: Deletes a single token with the given UUID.
- *                  Note that you must also specify the corresponding device_uuid as a query parameter (for security reasons)
+ *                  Note that you must also specify the corresponding device_uuid as a query parameter (for security reasons).
+ *                  A token can only be deleted if it is still in OPEN state.
  *     tags:
  *       - Token API
  *     produces:

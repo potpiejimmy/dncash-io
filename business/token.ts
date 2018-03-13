@@ -48,7 +48,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
     return Device.findByCustomerAndUUID(customer, device_uuid).then(device => {
         if (!device) return;
         tokenChangeNotifier.notifyObservers(customer.id);
-        return db.querySingle("update token set state='DELETED' where owner_device_id=? and uuid=?", [device.id, uid]);
+        return db.querySingle("update token set state='DELETED' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]);
     });
 }
 
