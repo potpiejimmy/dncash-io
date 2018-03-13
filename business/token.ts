@@ -53,7 +53,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
 }
 
 export function getStatistics(customer: any): Promise<any> {
-    return db.querySingle("select state, type, sum(amount) from token where owner_id=? group by state, type", [customer.id]);
+    return db.querySingle("select state, type, sum(amount) as amount, count(*) as count from token where owner_id=? group by state, type", [customer.id]);
 }
 
 export function verifyAndLock(customer: any, device_uuid: string, radio_code: string): Promise<any> {
@@ -79,7 +79,7 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
             if (token.lock_device_id != cashDevice.id) throw "Sorry, token was locked by another device";
             
             // right now, we only support updating of the state and/or amount
-            if (!(['COMPLETED','CANCELED','FAILED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED allowed.";
+            if (!(['COMPLETED','CANCELED','FAILED','REJECTED','RETRACTED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED, REJECTED, RETRACTED allowed.";
             if (!newData.amount) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 

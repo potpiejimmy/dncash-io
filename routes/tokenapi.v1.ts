@@ -10,7 +10,7 @@ export const tokenApiV1: Router = Router();
  * @swagger
  * tags:
  *   - name: Token API
- *     description: The Token API provides restricted operations invoked by authorization entities
+ *     description: The Token API provides secure operations invoked by authorized entities
  *                  such as banking backends or secure personal wallets.
  *   - name: Cash API
  *     description: The Cash API is used by secure cash devices such as ATMs and cash registers.
