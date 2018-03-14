@@ -104,19 +104,27 @@ export const tokenApiV1: Router = Router();
  *      properties:
  *        device_uuid:
  *          type: string
+ *          required: true
  *          example: '916eb12e-4e8a-4833-8e78-be40115829e7'
  *        amount:
  *          type: number
  *          description: amount in smallest symbol units (e.g. cents)
+ *          required: true
  *          example: 10000
  *        symbol:
  *          type: string
  *          description: the currency symbol
+ *          required: true
  *          example: EUR
  *        type:
  *          type: string
  *          enum: [CASHOUT,CASHIN]
+ *          required: true
  *          example: CASHOUT
+ *        expires:
+ *          type: number
+ *          description: optional expiration timestamp in milliseconds since epoch
+ *          example: 1577829600000
  *        refname:
  *          type: string
  *          description: custom reference name or number
@@ -129,6 +137,7 @@ export const tokenApiV1: Router = Router();
  *        state:
  *          type: string
  *          description: token state
+ *          required: true
  *          enum: [COMPLETED,FAILED,CANCELED]
  *          example: COMPLETED
  *        amount:
@@ -228,6 +237,10 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
  *                  can only be decrypted on the token device holding the corresponding private key.
  *                  The token server does not store the original plain code, so that even compromised
  *                  token data cannot be used by someone else without physical access to the target device.
+ *                  The request body must at least contain the information about the amount, currency symbol,
+ *                  type and the target device_uuid. Other fields are optional. The info field is an 
+ *                  arbitrary JSON object that may contain the denomData array as shown (to specify a desired
+ *                  note selection) and any number of additional custom data fields to be stored along with the token.
  *     tags:
  *       - Token API
  *     produces:

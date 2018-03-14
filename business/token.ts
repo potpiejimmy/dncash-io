@@ -27,6 +27,7 @@ export function createToken(customer: any, token: any): Promise<any> {
             let code = crypto.randomBytes(config.DEFAULT_CODE_LEN);
             token.secure_code = encryptTokenCode(device.pubkey, code);
             token.info = JSON.stringify(token.info); // save info data as string
+            if (token.expires) token.expires = new Date(token.expires);
             tokenChangeNotifier.notifyObservers(customer.id);
             return insertNew(token).then(id => findById(id)).then(t => exportToken(t));
         });
@@ -93,13 +94,17 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
     });
 }
 
+function cleanUpExpired(): Promise<void> {
+    return db.querySingle("update token set state='EXPIRED' where state='OPEN' and expires<NOW()");
+}
+
 function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
     // Radio Code V.1: 36 characters token UUID + decrypted secure code in hex
     let token_uuid = radio_code.substring(0,36);
     let code = new Buffer(radio_code.substring(36), 'hex');
 
     // look up the token to find the associated token device
-    return findByUUID(token_uuid).then(token => {
+    return cleanUpExpired().then(() => findByUUID(token_uuid).then(token => {
         if (!token) throw "Token not found";
 
         // fetch the token device with its associated public key:
@@ -127,7 +132,7 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
                 return findById(token.id).then(t => exportToken(t));    
             });
         })
-    });
+    }));
 }
 
 /**

@@ -123,7 +123,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *                  CANCELED (operation canceled by the user),
  *                  REJECTED (process rejected or aborted by the system),
  *                  RETRACTED (dispensed money retracted).
- *                  In addition, the amount can be updated to the actual deposit or dispense amount.
+ *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional).
  *     tags:
  *       - Cash API
  *     produces:
