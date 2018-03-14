@@ -107,6 +107,18 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
             // compare the encrypted token codes:
             if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
 
+            // now check for cross-customer access
+            if (token.owner_id != cashDevice.customer_id) {
+                // The cash device and the token device belong to different
+                // customers ("Fremdkundenaus/einzahlung")
+                // Apply sophisticated rules here in the future allowing
+                // for cross-customer-clearing.
+                // For now, segregate all customers
+                return atomicRejectToken(token.id, cashDevice.id).then(res => {
+                    throw "Foreign token rejected";
+                });
+            }
+
             // okay, verified, now try to lock the token:
             return atomicLockToken(token.id, cashDevice.id).then(success => {
                 if (!success) throw "Token not in OPEN state.";
@@ -174,6 +186,10 @@ function findByUUID(uid: string): Promise<any> {
 
 function atomicLockToken(id: number, cashDeviceId: number): Promise<boolean> {
     return db.querySingle("update token set state='LOCKED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
+}
+
+function atomicRejectToken(id: number, cashDeviceId: number): Promise<boolean> {
+    return db.querySingle("update token set state='REJECTED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
 function updateLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {
