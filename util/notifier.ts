@@ -2,7 +2,7 @@ class Notifier {
 
     observers = {};
 
-    addObserver(scope: string, id: string, observer: () => void) {
+    addObserver(scope: string, id: string, observer: (payload: any) => void) {
         if (!(scope in this.observers)) this.observers[scope] = {};
         this.observers[scope][id] = observer;
     }
@@ -13,9 +13,9 @@ class Notifier {
         }
     }
 
-    notifyObservers(scope: string) {
+    notifyObservers(scope: string, payload: any) {
         if (scope in this.observers) {
-          Object.keys(this.observers[scope]).forEach(key => this.observers[scope][key]());
+          Object.keys(this.observers[scope]).forEach(key => this.observers[scope][key](payload));
         }
     }
 }

@@ -30,6 +30,7 @@ import { routerAdminV1Auth } from "./routes/admin.v1.auth";
 import { routerAdminV1 } from "./routes/admin.v1";
 import { routerAdminV1Ws } from "./routes/admin.v1.ws";
 import { tokenApiV1 } from "./routes/tokenapi.v1";
+import { tokenApiV1Ws } from "./routes/tokenapi.v1.ws";
 import { cashApiV1 } from "./routes/cashapi.v1";
 import { mobileApiV1 } from "./routes/mobileapi.v1";
 
@@ -57,11 +58,12 @@ app.use("/dnapi/admin/v1", jwtauth.verifyToken(), routerAdminV1);
 app.use("/dnapi/token/v1", apiauth.verifyAccess, apiauth.verifyTokenApi, apiauth.verifyCustomer, tokenApiV1);
 // High-security route for Cash API using DB-verified access secret:
 app.use("/dnapi/cash/v1", apiauth.verifyAccess, apiauth.verifyCashApi, apiauth.verifyCustomer, cashApiV1);
-// Mobile API (unsecured for now, since it only provides the secure trigger API)
+// Mobile API (intentionally unsecured, since it provides the secure trigger API)
 app.use("/dnapi/mobile/v1", mobileApiV1);
 
 // WebSocket routes (unsecured)
 app.use("/dnapi/adminws/v1", routerAdminV1Ws);
+app.use("/dnapi/tokenws/v1", tokenApiV1Ws);
 
 if (app.get('env') === 'production') {
     app.set('trust proxy', 1) // trust first proxy, allows sending secure cookies even if SSL terminated on proxy  

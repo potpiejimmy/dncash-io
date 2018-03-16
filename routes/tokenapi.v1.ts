@@ -150,6 +150,9 @@ export const tokenApiV1: Router = Router();
  *        uuid:
  *          type: string
  *          example: '256fb6a1-23c6-41b0-8e59-1824d1342d1f'
+ *        device_uuid:
+ *          type: string
+ *          example: 'c716c0ca-fc93-442b-a295-93f62e6e3a1f'
  *        secure_code:
  *          type: string
  *          description: Secure code encrypted with device public key
@@ -282,9 +285,9 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  * @swagger
  * /dnapi/token/v1/tokens:
  *   get:
- *     summary: Get cash tokens
+ *     summary: Gets cash tokens
  *     description: Gets all cash tokens for the currently authenticated user.
- *                  If the query parameter ?device_uuid=... is specified, only tokens for that device are returned.
+ *                  If the query parameter ?device_uuid=... is specified, only tokens in state OPEN for that device are returned.
  *     tags:
  *       - Token API
  *     produces:
@@ -319,11 +322,53 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
 tokenApiV1.get("/tokens", function (request: Request, response: Response, next: NextFunction) {
     let result;
     if (request.query.device_uuid) {
-        result = Token.findByDeviceUUID(request.user, request.query.device_uuid);
+        result = Token.getByDeviceUUID(request.user, request.query.device_uuid);
     } else {
-        result = Token.findByCustomer(request.user);
+        result = Token.getByCustomer(request.user);
     }
     result.then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/token/v1/tokens/{uuid}:
+ *   get:
+ *     summary: Gets a single cash token
+ *     description: Returns the cash token with the given UUID
+ *     tags:
+ *       - Token API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Token API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Token API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: uuid
+ *         description: A token UUID
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Returns token information
+ *         schema:
+ *           $ref: '#/definitions/token_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+tokenApiV1.get("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Token.getByUUID(request.user, request.params.uid)
+    .then(res => response.json(res))
     .catch(err => next(err));
 });
 
