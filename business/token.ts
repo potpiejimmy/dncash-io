@@ -1,5 +1,6 @@
 import * as db from "../util/db";
 import * as Device from "./device";
+import * as Journal from "./journal";
 import * as crypto from 'crypto';
 import * as constants from 'constants';
 import * as forge from 'node-forge';
@@ -29,7 +30,10 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.info = JSON.stringify(token.info); // save info data as string
             if (token.expires) token.expires = new Date(token.expires);
             tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
-            return insertNew(token).then(id => findById(id)).then(t => exportToken(t));
+            return insertNew(token).then(id => findById(id)).then(t => {
+                Journal.journalize(customer.id, "token", "create", t);
+                return exportToken(t);
+            });
         });
     });
 }
@@ -57,8 +61,15 @@ export function getByUUID(customer: any, uid: string): Promise<any> {
 export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: string): Promise<any> {
     return Device.findByCustomerAndUUID(customer, device_uuid).then(device => {
         if (!device) return;
-        tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
-        return db.querySingle("update token set state='DELETED' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]);
+        return db.querySingle("update token set state='DELETED' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]).then(res => {
+            if (res.affectedRows) {
+                tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
+                return findByUUID(uid).then(t => {
+                    Journal.journalize(customer.id, "token", "delete", t);
+                    return exportToken(t);
+                });
+            }
+        });
     });
 }
 
@@ -97,7 +108,10 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
                 if (!success) throw "Token not in LOCKED state.";
                 tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: uid});
                 // re-read and export:
-                return findById(token.id).then(t => exportToken(t));
+                return findById(token.id).then(t => {
+                    Journal.journalize(customer.id, "token", "confirm", t);
+                    return exportToken(t)
+                });
             });
         });        
     });
@@ -128,21 +142,27 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
                 // Apply sophisticated rules here in the future allowing
                 // for cross-customer-clearing.
                 // For now, segregate all customers
-                return atomicRejectToken(token.id, cashDevice.id).then(res => {
-                    tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token_uuid});
+                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
                     throw "Foreign token rejected";
                 });
             }
 
             // okay, verified, now try to lock the token:
-            return atomicLockToken(token.id, cashDevice.id).then(success => {
-                if (!success) throw "Token not in OPEN state.";
-                tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token_uuid});
-                // re-read and export:
-                return findById(token.id).then(t => exportToken(t));
-            });
+            return atomicLockAndReturn(cashDevice, token, "lock", "LOCKED");
         })
     }));
+}
+
+function atomicLockAndReturn(cashDevice: any, token: any, action: string, state: string): Promise<any> {
+    return atomicLockTokenDB(token.id, cashDevice.id, state).then(success => {
+        if (!success) throw "Token not in OPEN state.";
+        tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token.uuid});
+        // re-read and export:
+        return findById(token.id).then(t => {
+            Journal.journalize(cashDevice.customer_id, "token", action, t);
+            return exportToken(t)
+        });
+    });
 }
 
 /**
@@ -199,12 +219,8 @@ function findByUUID(uid: string): Promise<any> {
     return db.querySingle("select * from token where uuid=?", [uid]).then(res => res[0]);
 }
 
-function atomicLockToken(id: number, cashDeviceId: number): Promise<boolean> {
-    return db.querySingle("update token set state='LOCKED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
-}
-
-function atomicRejectToken(id: number, cashDeviceId: number): Promise<boolean> {
-    return db.querySingle("update token set state='REJECTED',lock_device_id=?,updated=? where id=? and state='OPEN'", [cashDeviceId,new Date(),id]).then(res => res.affectedRows);
+function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Promise<boolean> {
+    return db.querySingle("update token set state=?,lock_device_id=?,updated=? where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
 function updateLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {

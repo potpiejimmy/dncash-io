@@ -1,0 +1,23 @@
+import * as db from "../util/db";
+
+export function journalize(customer_id: number, entity: string, action: string, data: any): void {
+    db.querySingle("insert into journal set ?", [{
+        customer_id: customer_id,
+        entity: entity,
+        action: action,
+        data: JSON.stringify(data)
+    }]);
+}
+
+export function getJournal(customer_id: number, limit: string): Promise<any> {
+    let params = [customer_id];
+    let sql = "select * from journal where customer_id=? order by created desc";
+    if (limit) {
+        params.push(parseInt(limit));
+        sql += " limit ?";
+    }
+    return db.querySingle(sql, params).then(res => {
+        res.forEach(j => j.data = JSON.parse(j.data));
+        return res;
+    });
+}

@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   `amount` DECIMAL(13,4) NOT NULL,
   `symbol` VARCHAR(5) NOT NULL,
   `state` ENUM('OPEN', 'DELETED', 'LOCKED', 'COMPLETED', 'FAILED', 'EXPIRED', 'CLEARED', 'CANCELED', 'REJECTED', 'RETRACTED') NOT NULL DEFAULT 'OPEN',
+  `clearstate` TINYINT NOT NULL DEFAULT 0,
   `expires` TIMESTAMP NULL,
   `refname` VARCHAR(36) NULL,
   `info` VARCHAR(255) NULL,
@@ -109,6 +110,26 @@ CREATE TABLE IF NOT EXISTS `token` (
   CONSTRAINT `fk_token_customer_device2`
     FOREIGN KEY (`lock_device_id`)
     REFERENCES `customer_device` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `journal`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `journal` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `customer_id` INT NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
+  `entity` VARCHAR(45) NOT NULL,
+  `action` VARCHAR(45) NOT NULL,
+  `data` TEXT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_journal_customer1_idx` (`customer_id` ASC),
+  CONSTRAINT `fk_journal_customer1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `customer` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

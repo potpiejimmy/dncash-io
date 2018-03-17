@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as Access from "../business/access";
 import * as Device from "../business/device";
 import * as Token from "../business/token";
+import * as Journal from "../business/journal";
 
 export const routerAdminV1: Router = Router();
 
@@ -70,6 +71,17 @@ routerAdminV1.delete("/devices/:id", function (request: Request, response: Respo
  */
 routerAdminV1.get("/tokenstat", function (request: Request, response: Response, next: NextFunction) {
     Token.getStatistics(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------- journal ---------------
+
+/*
+ * Returns journal for the authenticated user
+ */
+routerAdminV1.get("/journal", function (request: Request, response: Response, next: NextFunction) {
+    Journal.getJournal(request.user.id, request.query.limit)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
