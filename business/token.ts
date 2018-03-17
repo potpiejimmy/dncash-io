@@ -129,6 +129,7 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
                 // for cross-customer-clearing.
                 // For now, segregate all customers
                 return atomicRejectToken(token.id, cashDevice.id).then(res => {
+                    tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token_uuid});
                     throw "Foreign token rejected";
                 });
             }

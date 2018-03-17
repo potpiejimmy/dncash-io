@@ -12,9 +12,9 @@ export const tokenApiV1Ws: Router = Router();
  * wss:/dnapi/tokenws/v1/tokenchange/{listenKey}:
  *   head:
  *     summary: WebSocket endpoint for live token change notifications
- *     description: Note&colon; This is a live WebSocket endpoint, not an HTTP endpoint. It is included here for documentation
- *                  purposes only.
- *                  The token change endpoint immediately notifies the listener about token state changes. Only the token UUID
+ *     description: (Note&colon; This is a WebSocket endpoint, not an HTTP endpoint. It is included here for documentation
+ *                  purposes only.)
+ *                  The token change endpoint immediately notifies the listener about token state changes. Note that only the token UUID
  *                  is reported on this interface for performance and security reasons.
  *     tags:
  *       - Token API
@@ -22,14 +22,15 @@ export const tokenApiV1Ws: Router = Router();
  *       - application/json
  *     parameters:
  *       - name: listenKey
- *         description: The "listen key" is the Token API Key (DN-API-KEY) converted from its Base64 representation to a hex string
+ *         description: The "listen key" is the Token API Key (DN-API-KEY) converted from its Base64 representation to a hex string.
+ *                      If the listen key is incorrect, the websocket is closed immediately from the remote end.
  *         in: path
  *         required: true
  *         type: string
  *         example: 461736a05219a2decc988ead849dbed3ec2e4e2eeaa982f576c4445fd0552ee818f1a1454cbc3fa7fadc3570eba56136
  *     responses:
  *       200:
- *         description: Return array of tokens
+ *         description: Sends out a token UUID in the below format every time a token changes.
  *         schema:
  *           type: object
  *           properties:
