@@ -93,3 +93,9 @@ routerAdminV1.get("/admin/devicestat", function (request: Request, response: Res
     .then(res => response.json(res))
     .catch(err => next(err));
 });
+
+routerAdminV1.get("/admin/journal", function (request: Request, response: Response, next: NextFunction) {
+    Journal.getAdminJournal(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});

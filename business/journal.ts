@@ -21,3 +21,8 @@ export function getJournal(customer_id: number, limit: string): Promise<any> {
         return res;
     });
 }
+
+export function getAdminJournal(customer: any): Promise<any> {
+    if (!customer.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return db.querySingle("select j.created,email,entity,action from customer c join journal j on j.customer_id=c.id order by j.created desc");
+}

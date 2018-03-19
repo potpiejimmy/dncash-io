@@ -4,6 +4,12 @@ import * as FormData from 'form-data';
 import * as db from "../util/db";
 import * as jwtauth from "../util/jwtauth";
 
+class BadLogin {
+    count: number;
+    lastUsed: number;
+}
+let badLogins = new Map<string,BadLogin>();
+
 export function register(user: any): Promise<any> {
     return findUserByEmail(user.email).then(found => {
         if (found) return {"result": "Sorry, this email is already registered."};
@@ -26,11 +32,29 @@ export function register(user: any): Promise<any> {
 export function login(email: string, password: string): Promise<any> {
     return findUserByEmail(email).then(user => {
         if (user && crypto.createHash('sha256').update(password || '').digest("hex") == user.password) {
+            delete badLogins[email];
             return authenticate(user);
         } else {
-            return {"result": "Sorry, wrong user or password."};
+            return handleBadLogins(email);
         }
     });        
+}
+
+function handleBadLogins(email: string): Promise<any> {
+    Object.keys(badLogins).forEach(k => {
+        if (Date.now() - badLogins[k].lastUsed > 24*60*60*1000) delete badLogins[k];
+    });
+    let badLogin: BadLogin = badLogins[email];
+    if (!badLogin) {
+        badLogin = {count: 0, lastUsed: 0};
+        badLogins[email] = badLogin;
+    };
+    badLogin.count++;
+    badLogin.lastUsed = Date.now();
+    return new Promise<any>(resolve => setTimeout(() => 
+        resolve({"result": "Sorry, wrong user or password."}),
+        (Math.pow(2,badLogin.count-1)-1) * 1000)
+    );
 }
 
 function findUserByEmail(email: string): Promise<any> {

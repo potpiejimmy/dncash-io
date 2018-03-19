@@ -114,9 +114,9 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  * /dnapi/cash/v1/tokens/{uuid}:
  *   put:
  *     summary: Confirms a token
- *     description: Updates the given token, thereby notifying the server about succesful or failed cash processing.
+ *     description: Updates the given token, thereby notifying the server about successful or failed cash processing.
  *                  You must specify the cash device UUID as a query parameter.
- *                  A token can only be updated by the device that has succesfully transfered the token into the locked state before.
+ *                  A token can only be updated by the device that has successfully transfered the token into the locked state before.
  *                  Only the token state can be updated, and only from state LOCKED to one of
  *                  COMPLETED (completed normally, amount to be settled),
  *                  FAILED (technical failure),
