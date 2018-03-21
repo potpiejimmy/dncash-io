@@ -38,24 +38,44 @@ export function createToken(customer: any, token: any): Promise<any> {
     });
 }
 
-let exportTokenSelect = "select t.*,d.uuid as device_uuid from token t join customer_device d on t.owner_device_id=d.id";
-
-export function getByDeviceUUID(customer: any, uid: string): Promise<any> {
-    return Device.findByCustomerAndUUID(customer, uid).then(device => {
-        if (!device) return [];
-        return db.querySingle(exportTokenSelect + " where t.owner_device_id=? and t.state='OPEN'", [device.id]).then(res => exportTokens(res));
+export function getOpenForDevice(customer: any, d_uid: string): Promise<any> {
+    return getFilteredExportedTokens(customer, {
+        "d.uuid": d_uid,
+        "t.state": 'OPEN'
     });
 }
 
-export function getByCustomer(customer: any): Promise<any> {
-    return db.querySingle(exportTokenSelect + " where t.owner_id=?", [customer.id]).then(res => exportTokens(res));
+export function getByCustomer(customer: any, filters: any): Promise<any> {
+    return getFilteredExportedTokens(customer, filters);
 }
 
 export function getByUUID(customer: any, uid: string): Promise<any> {
-    return db.querySingle(exportTokenSelect + " where t.owner_id=? and t.uuid=?", [customer.id, uid]).then(res => {
+    return getFilteredExportedTokens(customer, {
+        "t.uuid": uid
+    }).then(res => {
         if (!res.length) return null;
-        return exportToken(res[0]);
+        return res[0];
     });
+}
+
+function getFilteredExportedTokens(customer: any, filters: any): Promise<any> {
+    let tokenSelect = "select t.*,d.uuid as device_uuid from token t join customer_device d on t.owner_device_id=d.id where t.owner_id=?";
+    let supportedFilters = ['d.uuid','t.uuid','t.state','t.clearstate'];
+
+    let queryParams = [customer.id];
+
+    Object.keys(filters).forEach(filter => {
+        let filterval = filters[filter];
+        // allow filters on token without t. as convenience, prefix them with t.
+        if (!filter.startsWith("d.") && !filter.startsWith("t.")) filter = "t."+filter;
+        if (supportedFilters.includes(filter)) {
+            // add supported filter
+            tokenSelect += " and " + filter + "=?";
+            queryParams.push(filterval);
+        }
+    });
+
+    return db.querySingle(tokenSelect, queryParams).then(res => exportTokens(res));
 }
 
 export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: string): Promise<any> {

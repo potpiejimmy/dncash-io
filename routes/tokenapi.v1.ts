@@ -138,7 +138,7 @@ export const tokenApiV1: Router = Router();
  *          type: string
  *          description: token state
  *          required: true
- *          enum: [COMPLETED,FAILED,CANCELED]
+ *          enum: [COMPLETED,CANCELED,FAILED,REJECTED,RETRACTED]
  *          example: COMPLETED
  *        amount:
  *          type: number
@@ -288,6 +288,7 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  *     summary: Gets cash tokens
  *     description: Gets all cash tokens for the currently authenticated user.
  *                  If the query parameter ?device_uuid=... is specified, only tokens in state OPEN for that device are returned.
+ *                  Otherwise, additional query parameters state and/or clearstate may be used to filter the result set accordingly.
  *     tags:
  *       - Token API
  *     produces:
@@ -307,6 +308,16 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  *         description: A Device UUID
  *         in: query
  *         type: string
+ *       - name: state
+ *         description: a single token state to filter
+ *         in: query
+ *         type: string
+ *         example: COMPLETED
+ *       - name: clearstate
+ *         description: value of column clearstate to filter (tokens have value 0 in clearstate by default).
+ *         in: query
+ *         type: number
+ *         example: 0
  *     responses:
  *       200:
  *         description: Return array of tokens
@@ -322,9 +333,9 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
 tokenApiV1.get("/tokens", function (request: Request, response: Response, next: NextFunction) {
     let result;
     if (request.query.device_uuid) {
-        result = Token.getByDeviceUUID(request.user, request.query.device_uuid);
+        result = Token.getOpenForDevice(request.user, request.query.device_uuid);
     } else {
-        result = Token.getByCustomer(request.user);
+        result = Token.getByCustomer(request.user, request.query);
     }
     result.then(res => response.json(res))
     .catch(err => next(err));
