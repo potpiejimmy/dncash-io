@@ -131,7 +131,7 @@ export const tokenApiV1: Router = Router();
  *          example: bookref_08154711
  *        info:
  *          $ref: '#/definitions/token_info'
- *   token_update:
+ *   token_confirm:
  *      type: object
  *      properties:
  *        state:
@@ -144,6 +144,15 @@ export const tokenApiV1: Router = Router();
  *          type: number
  *          description: actual amount dispensed or deposited in smallest symbol units (cents)
  *          example: 9750
+ *   token_update:
+ *      type: object
+ *      properties:
+ *        clearstate:
+ *          type: number
+ *          description: token clearing state (generic number)
+ *          example: 1
+ *        info:
+ *          $ref: '#/definitions/token_info'
  *   token_response:
  *      type: object
  *      properties:
@@ -228,6 +237,91 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
     .catch(err => next(err));
 });
 
+/**
+ * @swagger
+ * /dnapi/token/v1/devices:
+ *   get:
+ *     summary: Gets registered devices
+ *     description: Returns the list of registered devices for the authenticated user.
+ *     tags:
+ *       - Token API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Token API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Token API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Returns list of devices
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/device_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+tokenApiV1.get("/devices", function (request: Request, response: Response, next: NextFunction) {
+    Device.findByCustomer(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/token/v1/devices/{uuid}:
+ *   get:
+ *     summary: Gets a single registered device
+ *     description: Returns the device data for the given device UUID
+ *     tags:
+ *       - Token API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Token API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Token API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: uuid
+ *         description: A device UUID
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Returns device information
+ *         schema:
+ *           $ref: '#/definitions/device_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ *       404:
+ *         description: device UUID not found
+ */
+tokenApiV1.get("/devices/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Device.findByCustomerAndUUID(request.user, request.params.uid)
+    .then(res => {
+        if (res) response.json(res);
+        else response.status(404).json("Not found");
+    })
+    .catch(err => next(err));
+});
 
 // ------- token ---------------------
 
@@ -288,7 +382,7 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  *     summary: Gets cash tokens
  *     description: Gets all cash tokens for the currently authenticated user.
  *                  If the query parameter ?device_uuid=... is specified, only tokens in state OPEN for that device are returned.
- *                  Otherwise, additional query parameters state and/or clearstate may be used to filter the result set accordingly.
+ *                  Otherwise, additional query parameters such as 'state' and/or 'clearstate' may be used to filter the result set accordingly.
  *     tags:
  *       - Token API
  *     produces:
@@ -376,10 +470,15 @@ tokenApiV1.get("/tokens", function (request: Request, response: Response, next: 
  *         description: unauthorized
  *         schema:
  *           $ref: '#/definitions/unauthorized'
+ *       404:
+ *         description: token UUID not found
  */
 tokenApiV1.get("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
     Token.getByUUID(request.user, request.params.uid)
-    .then(res => response.json(res))
+    .then(res => {
+        if (res) response.json(res);
+        else response.status(404).json("Not found");
+    })
     .catch(err => next(err));
 });
 
@@ -418,18 +517,76 @@ tokenApiV1.get("/tokens/:uid", function (request: Request, response: Response, n
  *         type: string
  *     responses:
  *       200:
- *         description: Return array of tokens
+ *         description: Returns updated token
  *         schema:
- *           type: array
- *           items:
- *             $ref: '#/definitions/token_response'
+ *           $ref: '#/definitions/token_response'
  *       401:
  *         description: unauthorized
  *         schema:
  *           $ref: '#/definitions/unauthorized'
+ *       404:
+ *         description: token UUID not found
  */
 tokenApiV1.delete("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
     Token.deleteByDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid)
-    .then(res => response.json(res))
+    .then(res => {
+        if (res) response.json(res);
+        else response.status(404).json("Not found");
+    })
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/token/v1/tokens/{uuid}:
+ *   put:
+ *     summary: Updates token data
+ *     description: Updates specific information about a token. This function can be used to update
+ *                  the clearing and/or settling information of a token. Currently, only updating
+ *                  of the fields 'clearstate' and/or 'info' is allowed.
+ *     tags:
+ *       - Token API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Token API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Token API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: uuid
+ *         description: The token UUID
+ *         in: path
+ *         required: true
+ *         type: string
+ *       - name: body
+ *         description: Token update data
+ *         required: true
+ *         in: body
+ *         schema:
+ *           $ref: '#/definitions/token_update'
+ *     responses:
+ *       200:
+ *         description: Returns updated token
+ *         schema:
+ *           $ref: '#/definitions/token_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ *       404:
+ *         description: token UUID not found
+ */
+tokenApiV1.put("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Token.updateByUUID(request.user, request.params.uid, request.body)
+    .then(res => {
+        if (res) response.json(res);
+        else response.status(404).json("Not found");
+    })
     .catch(err => next(err));
 });

@@ -93,6 +93,18 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
     });
 }
 
+export function updateByUUID(customer: any, uid: string, body: any): Promise<any> {
+    if (body.info) body.info = JSON.stringify(body.info);
+    return updateToken(uid, body).then(updcount => {
+        if (!updcount) return null;
+        tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
+        return findByUUID(uid).then(t => {
+            Journal.journalize(customer.id, "token", "update", t);
+            return exportToken(t);
+        });
+    });
+}
+
 export function getStatistics(customer: any): Promise<any> {
     return db.querySingle("select state, type, sum(amount) as amount, count(*) as count from token where owner_id=? group by state, type", [customer.id]);
 }
@@ -111,7 +123,7 @@ export function verifyAndLockByTrigger(device_id: number, radio_code: string): P
     });
 }
 
-export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, uid: string, newData: any): Promise<any> {
+export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, uid: string, newData: any): Promise<any> {
     return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
         if (!cashDevice) throw "Cash device with UUID " + device_uuid + " not found.";
         return findByUUID(uid).then(token => {
@@ -124,7 +136,7 @@ export function updateByLockDeviceAndUUID(customer: any, device_uuid: string, ui
             if (!newData.amount) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 
-            return updateLockedToken(token.id, newData.state, newData.amount).then(success => {
+            return confirmLockedToken(token.id, newData.state, newData.amount).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
                 tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: uid});
                 // re-read and export:
@@ -243,6 +255,22 @@ function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Pro
     return db.querySingle("update token set state=?,lock_device_id=?,updated=? where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
-function updateLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {
+function confirmLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {
     return db.querySingle("update token set state=?,amount=?,updated=? where id=? and state='LOCKED'", [newState,newAmount,new Date(),id]).then(res => res.affectedRows);
+}
+
+function updateToken(uid: string, newFields: any): Promise<boolean> {
+    let allowedFields = ['clearstate','info'];
+    let params = [];
+    let query = "update token set ";
+    Object.keys(newFields).forEach(f => {
+        if (allowedFields.includes(f)) {
+            if (params.length) query += ", ";
+            query += f + "=?";
+            params.push(newFields[f]);
+        }
+    })
+    query += " where uuid=?";
+    params.push(uid);
+    return db.querySingle(query, params).then(res => res.affectedRows);
 }

@@ -154,7 +154,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *         required: true
  *         in: body
  *         schema:
- *           $ref: '#/definitions/token_update'
+ *           $ref: '#/definitions/token_confirm'
  *     responses:
  *       200:
  *         description: Returns updated token
@@ -168,7 +168,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *           $ref: '#/definitions/unauthorized'
  */
 cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
-    Token.updateByLockDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid, request.body)
+    Token.confirmByLockDeviceAndUUID(request.user, request.query.device_uuid, request.params.uid, request.body)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
