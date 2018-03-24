@@ -27,12 +27,14 @@
     "express-ws": "^3.0.0",
     "form-data": "^2.3.2",
     "jsonwebtoken": "^8.1.1",
+    "morgan": "^1.9.0",
     "mysql": "^2.15.0",
     "nocache": "^2.0.0",
     "node-fetch": "^2.0.0",
     "node-forge": "^0.7.2",
     "swagger-jsdoc": "^1.9.7",
     "swagger-ui-express": "^2.0.15",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "winston": "^2.4.1"
   }
 }

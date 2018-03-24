@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import * as Device from "../business/device";
 import * as Token from "../business/token";
 import * as Trigger from "../business/trigger";
+import * as logging from "../util/logging";
 
 export const cashApiV1: Router = Router();
 
@@ -104,7 +105,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
     Token.verifyAndLock(request.user, request.query.device_uuid, request.params.radiocode)
     .then(res => response.json(res))
     .catch(err => {
-        console.log(err);
+        logging.logger.error(err);
         response.status(403).json({error:err});
     });
 });

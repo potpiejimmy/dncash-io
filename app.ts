@@ -10,14 +10,16 @@ import * as express from 'express';
 import * as expressWs from 'express-ws';
 import { json } from 'body-parser';
 import * as nocache from 'nocache';
-import * as swagger from './util/swagger';
+import * as morgan from 'morgan';
 
+import * as swagger from './util/swagger';
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
+import * as logging from "./util/logging";
 
 const app: express.Application = express();
 
-// Build and server swagger UI API docs:
+// Build and serve swagger UI API docs:
 swagger.setup(app);
 // and prevent favicon 404:
 app.get('/favicon.ico', (req, res) => res.status(204));
@@ -46,6 +48,9 @@ app.use(function(req, res, next) {
     next();
 });
   
+// morgan logger for HTTP logging, log to winston appenders:
+app.use(morgan("combined", { stream: logging.stream }));
+
 app.get('/', (req, res) => res.send('dncash.io is running on /dnapi.'))
 app.get('/dnapi', (req, res) => res.send('<a href="/dnapi/docs">API Docs</a>'));
 
@@ -78,7 +83,7 @@ app.use(function(req: express.Request, res: express.Response, next) {
 // production error handler
 // no stacktrace leaked to user
 app.use(function(err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
-    console.log(err);
+    logging.logger.error(err);
     res.status(err.status || 500);
     res.json({
         error: {},
