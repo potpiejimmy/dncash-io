@@ -49,7 +49,9 @@ app.use(function(req, res, next) {
 });
   
 // morgan logger for HTTP logging, log to winston appenders:
-app.use(morgan("combined", { stream: logging.stream }));
+if (process.env.NODE_ENV !== 'test') {
+    app.use(morgan("combined", { stream: logging.stream }));
+}
 
 app.get('/', (req, res) => res.send('dncash.io is running on /dnapi.'))
 app.get('/dnapi', (req, res) => res.send('<a href="/dnapi/docs">API Docs</a>'));
@@ -94,3 +96,6 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
 // listen:
 let port = process.env.PORT || 3000;
 app.listen(port, () => console.log('dncash.io listening on port ' + port));
+
+// export app for test code:
+module.exports = app;

@@ -80,10 +80,11 @@ function authenticate(user): any {
     return {token:token};
 }
 
-
 function verifyCaptcha(captcha : string) : Promise<any> {
-    // return Promise.resolve({success:true});
-    var form = new FormData();
+    if (process.env.NODE_ENV === 'test') {
+        return Promise.resolve({success:true});
+    }
+    let form = new FormData();
     form.append('secret', process.env.CAPTCHA_SECRET || '6Lc7zEcUAAAAALq3kHl5F4WPe_Jiqc3vT0vq3m0F');
     form.append('response', captcha);
     return fetch('https://www.google.com/recaptcha/api/siteverify', { method: 'POST', body: form })

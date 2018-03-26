@@ -2,6 +2,7 @@ import * as winston from 'winston';
 
 winston.emitErrs = true;
 
+/* define logger */
 export let logger = new winston.Logger({
     transports: [
         new winston.transports.File({
@@ -24,6 +25,7 @@ export let logger = new winston.Logger({
     exitOnError: false
 });
 
+/* used by morgan to log HTTP requests */
 export let stream = {
     write: function(message, encoding) {
         logger.info(message);
