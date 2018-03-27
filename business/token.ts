@@ -97,7 +97,6 @@ export function updateByUUID(customer: any, uid: string, body: any): Promise<any
     if (body.info) body.info = JSON.stringify(body.info);
     return updateToken(uid, body).then(updcount => {
         if (!updcount) return null;
-        tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
         return findByUUID(uid).then(t => {
             Journal.journalize(customer.id, "token", "update", t);
             return exportToken(t);

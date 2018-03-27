@@ -105,7 +105,9 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
     Token.verifyAndLock(request.user, request.query.device_uuid, request.params.radiocode)
     .then(res => response.json(res))
     .catch(err => {
-        logging.logger.error(err);
+        if (process.env.NODE_ENV !== 'test') {
+            logging.logger.error(err);
+        }
         response.status(403).json({error:err});
     });
 });
