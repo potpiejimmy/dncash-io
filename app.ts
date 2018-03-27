@@ -85,14 +85,16 @@ app.use(function(req: express.Request, res: express.Response, next) {
 // production error handler
 // no stacktrace leaked to user
 app.use(function(err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
-    logging.logger.error(err);
+    if (process.env.NODE_ENV !== 'test') {
+        logging.logger.error(err);
+    }
     res.status(err.status || 500);
     res.json({
         error: {},
         message: err.message || err
     });
 });
-  
+
 // listen:
 let port = process.env.PORT || 3000;
 app.listen(port, () => console.log('dncash.io listening on port ' + port));

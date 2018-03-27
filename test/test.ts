@@ -28,7 +28,7 @@ function purgeDB(done) {
 before(done => purgeDB(done));
 after(done => purgeDB(done));
 
-/** Testing /routes/admin.v1.auth **/
+/** Testing /routes/admin.v1.auth.ts **/
 
 describe("admin.v1.auth:", () => {
 
@@ -92,9 +92,20 @@ describe("admin.v1.auth:", () => {
     });
 });
 
-/** Testing /routes/admin.v1 **/
+/** Testing /routes/admin.v1.ts **/
 
 describe("admin.v1:", () => {
+
+    describe("GET /access without session token", () => {
+        it("should return HTTP 401", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/access?scope=token-api")
+            .end((err, res) => {
+                res.should.have.status(401);
+                done();
+            });
+        });
+    });
 
     describe("POST /access", () => {
         it("should create new API credentials", done => {
@@ -131,6 +142,61 @@ describe("admin.v1:", () => {
         });
     });
 
+    describe("DELETE /access/:id", () => {
+        it("should delete API credentials", done => {
+            chai.request(app)
+            .delete("/dnapi/admin/v1/access/"+tokenApiId)
+            .set("authorization", "Bearer "+sessionToken)
+            .send({scope:'token-api'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("GET /access?scope=token-api", () => {
+        it("should return empty array", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/access?scope=token-api")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(0);
+                done();
+            });
+        });
+    });
+
+    describe("POST /access", () => {
+        it("should create new API credentials (2)", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/access")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({scope:'token-api'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('id');
+                tokenApiId = res.body.id;
+                done();
+            });
+        });
+    });
+
+    describe("PUT /access/:id with wrong password", () => {
+        it("should fail with HTTP 500", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/access/"+tokenApiId)
+            .set("authorization", "Bearer "+sessionToken)
+            .send({password:"12345679"})
+            .end((err, res) => {
+                res.should.have.status(500);
+                done();
+            });
+        });
+    });
+
     describe("PUT /access/:id", () => {
         it("should return API key and secret", done => {
             chai.request(app)
@@ -150,5 +216,52 @@ describe("admin.v1:", () => {
     });
 });
 
-/** Testing /routes/tokenapi.v1 **/
+/** Testing /routes/tokenapi.v1.ts **/
 
+describe("tokenapi.v1:", () => {
+
+    describe("POST /devices without API credentials", () => {
+        it("should return HTTP 401", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/devices")
+            .send({refname:'testdevice1'})
+            .end((err, res) => {
+                res.should.have.status(401);
+                done();
+            });
+        });
+    });
+
+    describe("POST /devices with wrong API credentials", () => {
+        it("should return HTTP 401", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/devices")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", 'wrong')
+            .send({refname:'testdevice1'})
+            .end((err, res) => {
+                res.should.have.status(401);
+                done();
+            });
+        });
+    });
+
+    describe("POST /devices", () => {
+        it("should register a new token device of type MOBILE", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/devices")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", tokenApiSecret)
+            .send({refname:'testdevice1'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('refname');
+                res.body.should.have.property('type');
+                res.body.refname.should.be.eql('testdevice1');
+                res.body.type.should.be.eql('MOBILE');
+                done();
+            });
+        });
+    });
+});
