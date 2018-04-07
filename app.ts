@@ -17,7 +17,11 @@ import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
 import * as logging from "./util/logging";
 
+logging.logger.info("Setting up Express");
+
 const app: express.Application = express();
+
+logging.logger.info("Building API docs");
 
 // Build and serve swagger UI API docs:
 swagger.setup(app);
@@ -26,6 +30,8 @@ app.get('/favicon.ico', (req, res) => res.status(204));
 
 // enable web sockets for express (do this before loading routes)
 expressWs(app);
+
+logging.logger.info("Loading routes");
 
 // Routes:
 import { routerAdminV1Auth } from "./routes/admin.v1.auth";
@@ -52,6 +58,8 @@ app.use(function(req, res, next) {
 if (process.env.NODE_ENV !== 'test') {
     app.use(morgan("combined", { stream: logging.stream }));
 }
+
+logging.logger.info("Setting up routes");
 
 app.get('/', (req, res) => res.send('dncash.io is running on /dnapi.'))
 app.get('/dnapi', (req, res) => res.send('<a href="/dnapi/docs">API Docs</a>'));
@@ -95,9 +103,11 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
     });
 });
 
+logging.logger.info("Server initialized successfully");
+
 // listen:
 let port = process.env.PORT || 3000;
-app.listen(port, () => console.log('dncash.io listening on port ' + port));
+app.listen(port, () => logging.logger.info('dncash.io is up and running, listening on port ' + port));
 
 // export app for test code:
 module.exports = app;

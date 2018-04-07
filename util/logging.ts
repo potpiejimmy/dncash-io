@@ -19,7 +19,8 @@ export let logger = new winston.Logger({
             level: 'debug',
             handleExceptions: true,
             json: false,
-            colorize: true
+            colorize: true,
+            timestamp: true
         })
     ],
     exitOnError: false
