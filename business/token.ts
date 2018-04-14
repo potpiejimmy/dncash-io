@@ -6,18 +6,20 @@ import * as constants from 'constants';
 import * as forge from 'node-forge';
 import * as uuid from "uuid/v4"; // Random-based UUID
 import * as config from '../config';
+import * as Utils from '../util/utils';
+import * as logging from "../util/logging";
 import { tokenChangeNotifier } from "../util/notifier";
 
 export function createToken(customer: any, token: any): Promise<any> {
     return Device.findByCustomerAndUUID(customer, token.device_uuid).then(device => {
         if (!device) throw "Sorry, device with UUID " + token.device_uuid + " not found.";
 
-        // create secure UUID
-        let uid = uuid();
-        // check if unique
-        return findByUUID(uid).then(found => {
-            if (found) return createToken(customer, token); // try again
+        let retries = 10;
+        let createdToken: any;
 
+        return Utils.asyncWhile(() => retries > 0, () => {
+            // create secure UUID
+            let uid = uuid();
             delete token.device_uuid;
             delete token.id;
             delete token.lock_device_id;
@@ -25,15 +27,29 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.uuid = uid;
             token.owner_id = customer.id;
             token.owner_device_id = device.id;
-            let code = crypto.randomBytes(config.DEFAULT_CODE_LEN);
-            token.secure_code = encryptTokenCode(device.pubkey, code);
+            // create plain code (from a secure random int32) (will be globally unique)
+            // used for low security barcodes / manual modes only (retail)
+            // do not create a plain code for systems using radio or scanning to achieve higher security with secure codes only
+            let plain_code = parseInt(crypto.randomBytes(4).toString('hex'), 16) % Math.pow(10,config.DEFAULT_PLAIN_CODE_LEN);
+            token.plain_code = (""+(Math.pow(10,config.DEFAULT_PLAIN_CODE_LEN)+plain_code)).substr(1);
+            // create secure code
+            let secure_code = crypto.randomBytes(config.DEFAULT_SECURE_CODE_LEN);
+            token.secure_code = encryptTokenCode(device.pubkey, secure_code);
             token.info = JSON.stringify(token.info); // save info data as string
             if (token.expires) token.expires = new Date(token.expires);
-            tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
             return insertNew(token).then(id => findById(id)).then(t => {
+                tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
                 Journal.journalize(customer.id, "token", "create", t);
-                return exportToken(t);
+                createdToken = exportToken(t);
+                retries = 0;
+            }).catch(err => {
+                retries--;
+                if (retries) logging.logger.warn(err);
+                else logging.logger.error(err);
             });
+        }).then(() => {
+            if (createdToken) return createdToken;
+            throw "Token could not be created in database";
         });
     });
 }
@@ -81,7 +97,7 @@ function getFilteredExportedTokens(customer: any, filters: any): Promise<any> {
 export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: string): Promise<any> {
     return Device.findByCustomerAndUUID(customer, device_uuid).then(device => {
         if (!device) return;
-        return db.querySingle("update token set state='DELETED' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]).then(res => {
+        return db.querySingle("update token set state='DELETED',plain_code=null,secure_code='' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]).then(res => {
             if (res.affectedRows) {
                 tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
                 return findByUUID(uid).then(t => {
@@ -149,22 +165,41 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
 }
 
 function cleanUpExpired(): Promise<void> {
-    return db.querySingle("update token set state='EXPIRED' where state='OPEN' and expires<NOW()");
+    return db.querySingle("update token set state='EXPIRED',plain_code=null,secure_code='' where state='OPEN' and expires<NOW()");
 }
 
 function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
-    // Radio Code V.1: 36 characters token UUID + decrypted secure code in hex
-    let token_uuid = radio_code.substring(0,36);
-    let code = new Buffer(radio_code.substring(36), 'hex');
+
+    let codetype: string;
+    let token_id: string;
+    let code: Buffer;
+
+    if (!radio_code || !radio_code.length) throw "Illegal radio code";
+
+    if (radio_code.length > 36) {
+        // Radio Code Banking QR: 36 characters token UUID + decrypted secure code in hex
+        codetype = "long";
+        token_id = radio_code.substring(0,36);
+        code = new Buffer(radio_code.substring(36), 'hex');
+    } else {
+        // Radio Code Retail EAN-13: short decimal plain code
+        codetype = "short";
+        token_id = radio_code;
+    }
 
     // look up the token to find the associated token device
-    return cleanUpExpired().then(() => findByUUID(token_uuid).then(token => {
+    return cleanUpExpired().then(() => (codetype === "long" ? findByUUID(token_id) : findByPlainCode(token_id)).then(token => {
         if (!token) throw "Token not found";
 
         // fetch the token device with its associated public key:
         return Device.findById(token.owner_device_id).then(tokenDevice => {
             // compare the encrypted token codes:
-            if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
+            if (codetype === "long") {
+                // check the secure code
+                if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
+            } else {
+                // no secure code check for short EAN codes
+            }
 
             // now check for cross-customer access
             if (token.owner_id != cashDevice.customer_id) {
@@ -250,8 +285,12 @@ function findByUUID(uid: string): Promise<any> {
     return db.querySingle("select * from token where uuid=?", [uid]).then(res => res[0]);
 }
 
+function findByPlainCode(plainCode: string): Promise<any> {
+    return db.querySingle("select * from token where plain_code=?", [plainCode]).then(res => res[0]);
+}
+
 function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Promise<boolean> {
-    return db.querySingle("update token set state=?,lock_device_id=?,updated=? where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
+    return db.querySingle("update token set state=?,lock_device_id=?,updated=?,plain_code=null,secure_code='' where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
 function confirmLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {

@@ -37,6 +37,7 @@ function purgeDB(done) {
     })
 }
 
+// start with a clean DB
 before(done => purgeDB(done));
 //after(done => purgeDB(done));
 
@@ -44,7 +45,7 @@ before(done => purgeDB(done));
 
 describe("admin.v1.auth:", () => {
 
-    describe("POST /auth/register with short password", () => {
+    describe("Register a new user (bad password) | POST /auth/register with short password", () => {
         it("should respond with 'bad password'", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/auth/register")
@@ -59,7 +60,7 @@ describe("admin.v1.auth:", () => {
         });
     });
 
-    describe("POST /auth/register with long password", () => {
+    describe("Register a new user (ok) | POST /auth/register with long password", () => {
         it("should respond with session token", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/auth/register")
@@ -73,7 +74,7 @@ describe("admin.v1.auth:", () => {
         });
     });
 
-    describe("POST /auth with wrong password", () => {
+    describe("Sign in (bad password) | POST /auth with wrong password", () => {
         it("should return 'wrong user or password'", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/auth")
@@ -88,7 +89,7 @@ describe("admin.v1.auth:", () => {
         });
     });
 
-    describe("POST /auth with correct password", () => {
+    describe("Sign in (ok) | POST /auth with correct password", () => {
         it("should return session token", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/auth")
@@ -108,7 +109,7 @@ describe("admin.v1.auth:", () => {
 
 describe("admin.v1:", () => {
 
-    describe("GET /access without session token", () => {
+    describe("Read access (unauthorized) | GET /access without session token", () => {
         it("should return HTTP 401", done => {
             chai.request(app)
             .get("/dnapi/admin/v1/access?scope=token-api")
@@ -120,7 +121,7 @@ describe("admin.v1:", () => {
     });
 
     let tokenApiId;
-    describe("POST /access", () => {
+    describe("Create access Token API (ok) | POST /access", () => {
         it("should create new API credentials (token-api)", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/access")
@@ -140,7 +141,7 @@ describe("admin.v1:", () => {
     });
 
     let cashApiId;
-    describe("POST /access", () => {
+    describe("Create access Cash API (ok) | POST /access", () => {
         it("should create new API credentials (cash-api)", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/access")
@@ -159,7 +160,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("GET /access?scope=token-api", () => {
+    describe("Read access Token API (ok) | GET /access?scope=token-api", () => {
         it("should return array of API credentials, length 1", done => {
             chai.request(app)
             .get("/dnapi/admin/v1/access?scope=token-api")
@@ -175,7 +176,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("DELETE /access/:id", () => {
+    describe("Delete access Token API (ok) | DELETE /access/:id", () => {
         it("should delete API credentials", done => {
             chai.request(app)
             .delete("/dnapi/admin/v1/access/"+tokenApiId)
@@ -188,7 +189,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("GET /access?scope=token-api", () => {
+    describe("Read access Token API (empty) | GET /access?scope=token-api", () => {
         it("should return empty array", done => {
             chai.request(app)
             .get("/dnapi/admin/v1/access?scope=token-api")
@@ -202,7 +203,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("POST /access", () => {
+    describe("Create access Token API (ok) | POST /access", () => {
         it("should create new API credentials (2)", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/access")
@@ -217,7 +218,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("PUT /access/:id with wrong password", () => {
+    describe("Read API secret (bad password) | PUT /access/:id with wrong password", () => {
         it("should fail with HTTP 500", done => {
             chai.request(app)
             .put("/dnapi/admin/v1/access/"+tokenApiId)
@@ -230,7 +231,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("PUT /access/:id", () => {
+    describe("Read Token API secret (ok) | PUT /access/:id", () => {
         it("should return API key and secret (token-api)", done => {
             chai.request(app)
             .put("/dnapi/admin/v1/access/"+tokenApiId)
@@ -248,7 +249,7 @@ describe("admin.v1:", () => {
         });
     });
 
-    describe("PUT /access/:id", () => {
+    describe("Read Cash API secret (ok) | PUT /access/:id", () => {
         it("should return API key and secret (cash-api)", done => {
             chai.request(app)
             .put("/dnapi/admin/v1/access/"+cashApiId)
@@ -271,7 +272,7 @@ describe("admin.v1:", () => {
 
 describe("tokenapi.v1:", () => {
 
-    describe("POST /devices without API credentials", () => {
+    describe("Register token device (unauthorized) | POST /devices without API credentials", () => {
         it("should return HTTP 401", done => {
             chai.request(app)
             .post("/dnapi/token/v1/devices")
@@ -283,7 +284,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("POST /devices with wrong API credentials", () => {
+    describe("Register token device (bad credentials) | POST /devices with wrong API credentials", () => {
         it("should return HTTP 401", done => {
             chai.request(app)
             .post("/dnapi/token/v1/devices")
@@ -297,7 +298,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("POST /devices", () => {
+    describe("Register token device (ok) | POST /devices", () => {
         it("should register a new token device of type MOBILE", done => {
             chai.request(app)
             .post("/dnapi/token/v1/devices")
@@ -317,7 +318,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("GET /devices", () => {
+    describe("Read devices (ok) | GET /devices", () => {
         it("should return array of devices, length 1", done => {
             chai.request(app)
             .get("/dnapi/token/v1/devices")
@@ -336,7 +337,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("GET /devices/:uuid", () => {
+    describe("Read single device (ok) | GET /devices/:uuid", () => {
         it("should return single device with given UUID", done => {
             chai.request(app)
             .get("/dnapi/token/v1/devices/"+mobileUid)
@@ -352,7 +353,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("POST /tokens", () => {
+    describe("Create CASHOUT token (ok) | POST /tokens", () => {
         it("should create new token of type CASHOUT", done => {
             chai.request(app)
             .post("/dnapi/token/v1/tokens")
@@ -378,7 +379,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("POST /tokens (CASHIN)", () => {
+    describe("Create CASHIN token (ok) | POST /tokens (CASHIN)", () => {
         it("should create new token of type CASHIN", done => {
             chai.request(app)
             .post("/dnapi/token/v1/tokens")
@@ -402,7 +403,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("GET /tokens?device_uuid=:uuid", () => {
+    describe("Read tokens (ok) | GET /tokens?device_uuid=:uuid", () => {
         it("should return array of tokens in state OPEN, length 2", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?device_uuid="+mobileUid)
@@ -422,7 +423,7 @@ describe("tokenapi.v1:", () => {
 
 describe("cashapi.v1:", () => {
 
-    describe("POST /devices", () => {
+    describe("Register cash device (ok) | POST /devices", () => {
         it("should register a new cash device of type ATM", done => {
             chai.request(app)
             .post("/dnapi/cash/v1/devices")
@@ -444,7 +445,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("POST /devices", () => {
+    describe("Register 2nd cash device (ok) | POST /devices", () => {
         it("should register another cash device of type ATM", done => {
             chai.request(app)
             .post("/dnapi/cash/v1/devices")
@@ -466,7 +467,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("GET /tokens/:radiocode with wrong secure code", () => {
+    describe("Claim token (wrong secure code) | GET /tokens/:radiocode with wrong secure code", () => {
         it("should return HTTP 403 with message 'Invalid token code'", done => {
             chai.request(app)
             .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"ff?device_uuid="+atmUid1)
@@ -482,7 +483,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("GET /tokens/:radiocode with correct secure code", () => {
+    describe("Claim token (ok) | /tokens/:radiocode with correct secure code", () => {
         it("should verify and lock token", done => {
             chai.request(app)
             .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"?device_uuid="+atmUid1)
@@ -500,8 +501,8 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("GET /tokens/:radiocode with correct secure code, 2nd", () => {
-        it("should return HTTP 403 with message 'not in OPEN state'", done => {
+    describe("Claim token again (fail) | GET /tokens/:radiocode with correct secure code, 2nd", () => {
+        it("should return HTTP 403 with message 'Invalid token code'", done => {
             chai.request(app)
             .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
@@ -510,13 +511,13 @@ describe("cashapi.v1:", () => {
                 res.should.have.status(403);
                 res.body.should.be.a('object');
                 res.body.should.have.property('error');
-                res.body.error.should.contain('not in OPEN state');
+                res.body.error.should.contain('Invalid');
                 done();
             });
         });
     });
 
-    describe("PUT /tokens/:uuid with different ATM UUID", () => {
+    describe("Confirm token (different ATM) | PUT /tokens/:uuid with different ATM UUID", () => {
         it("should reject with message 'locked by another'", done => {
             chai.request(app)
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid2)
@@ -533,7 +534,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("PUT /tokens/:uuid with same ATM UUID", () => {
+    describe("Confirm token (ok) | PUT /tokens/:uuid with same ATM UUID", () => {
         it("should confirm token", done => {
             chai.request(app)
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
@@ -550,7 +551,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("PUT /tokens/:uuid, 2nd confirmation", () => {
+    describe("Confirm token again (fail) | PUT /tokens/:uuid, 2nd confirmation", () => {
         it("should reject with message 'not in LOCKED state'", done => {
             chai.request(app)
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
@@ -567,7 +568,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("POST /trigger", () => {
+    describe("Create trigger code (ok) | POST /trigger", () => {
         it("should create new trigger code", done => {
             chai.request(app)
             .post("/dnapi/cash/v1/trigger?device_uuid="+atmUid2)
@@ -583,7 +584,7 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("GET /trigger/:triggercode", () => {
+    describe("Fetch triggered token (ok) | GET /trigger/:triggercode", () => {
         it("should receive new LOCKED token when triggered", done => {
             chai.request(app)
             .get("/dnapi/cash/v1/trigger/"+triggerCode)
@@ -609,7 +610,7 @@ describe("cashapi.v1:", () => {
 
 describe("mobileapi.v1:", () => {
 
-    describe("PUT /trigger/:triggercode", () => {
+    describe("Claim and trigger (ok) | PUT /trigger/:triggercode", () => {
         it("should response with HTTP 204 no content and trigger ATM", done => {
             chai.request(app)
             .put("/dnapi/mobile/v1/trigger/"+triggerCode)
@@ -626,7 +627,7 @@ describe("mobileapi.v1:", () => {
 
 describe("cashapi.v1 (continue):", () => {
 
-    describe("PUT /tokens/:uuid", () => {
+    describe("Confirm triggered token (ok) | PUT /tokens/:uuid", () => {
         it("should confirm triggered token", done => {
             chai.request(app)
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid2)
@@ -648,7 +649,7 @@ describe("cashapi.v1 (continue):", () => {
 
 describe("tokenapi.v1 (continue):", () => {
 
-    describe("GET /tokens?device_uuid=:uuid", () => {
+    describe("Get open tokens for device (empty) | GET /tokens?device_uuid=:uuid", () => {
         it("should return empty array (no tokens in state OPEN)", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?device_uuid="+mobileUid)
@@ -663,7 +664,7 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("GET /tokens?state=FAILED", () => {
+    describe("Read filtered tokens, state FAILED (ok) | GET /tokens?state=FAILED", () => {
         it("should return one token in state FAILED", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?state=FAILED")
@@ -682,7 +683,7 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("PUT /tokens/:uuid", () => {
+    describe("Update token clearstate (ok) | PUT /tokens/:uuid", () => {
         it("should update token clearstate", done => {
             chai.request(app)
             .put("/dnapi/token/v1/tokens/"+tokenUid)
@@ -699,7 +700,7 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("GET /tokens?clearstate=0", () => {
+    describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
         it("should return one remaining token with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
@@ -718,7 +719,7 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("PUT /tokens/:uuid", () => {
+    describe("Update token clearstate and info (ok) | PUT /tokens/:uuid", () => {
         it("should update token clearstate and info with custom field", done => {
             chai.request(app)
             .put("/dnapi/token/v1/tokens/"+tokenUid)
@@ -738,7 +739,7 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("GET /tokens?clearstate=0", () => {
+    describe("Read filtered tokens, clearstate 0 (empty) | GET /tokens?clearstate=0", () => {
         it("should return empty array", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
