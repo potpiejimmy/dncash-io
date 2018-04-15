@@ -3,6 +3,7 @@ import * as Access from "../business/access";
 import * as Device from "../business/device";
 import * as Token from "../business/token";
 import * as Journal from "../business/journal";
+import * as Param from "../business/param";
 
 export const routerAdminV1: Router = Router();
 
@@ -82,6 +83,26 @@ routerAdminV1.get("/tokenstat", function (request: Request, response: Response, 
  */
 routerAdminV1.get("/journal", function (request: Request, response: Response, next: NextFunction) {
     Journal.getJournal(request.user.id, request.query.limit)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------- customer params ---------------
+
+/**
+ * Gets a parameter for the authenticated user
+ */
+routerAdminV1.get("/params/:pkey", function (request: Request, response: Response, next: NextFunction) {
+    Param.readParam(request.user.id, request.params.pkey)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * Sets a parameter for the authenticated user
+ */
+routerAdminV1.put("/params/:pkey", function (request: Request, response: Response, next: NextFunction) {
+    Param.writeParam(request.user.id, request.params.pkey, request.body)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

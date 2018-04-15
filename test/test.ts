@@ -29,7 +29,7 @@ let triggerCode;
 
 function purgeDB(done) {
     db.connection().then(c => {
-        let tables = ['journal','token','customer_device','customer_access','customer'];
+        let tables = ['clearing','journal','token','customer_device','customer_access','customer_param','customer'];
         tables.forEach(t => db.query(c, "delete from " + t));
         c.release();
         console.log("** DB purged **\n");
@@ -262,6 +262,62 @@ describe("admin.v1:", () => {
                 res.body.should.have.property('apisecret');
                 cashApiKey = res.body.apikey;
                 cashApiSecret = res.body.apisecret;
+                done();
+            });
+        });
+    });
+
+    describe("Set a parameter (ok) | PUT /params/:pkey", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/params/testparam")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({somedatakey:"somedatavalue"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Get a parameter (ok) | GET /params/:pkey", () => {
+        it("should return parameter with correct value", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/params/testparam")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('somedatakey');
+                res.body.somedatakey.should.be.eql('somedatavalue');
+                done();
+            });
+        });
+    });
+
+    describe("Update a parameter (ok) | PUT /params/:pkey", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/params/testparam")
+            .set("authorization", "Bearer "+sessionToken)
+            .send(["arrayvalue"])
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Get updated parameter (ok) | GET /params/:pkey", () => {
+        it("should return parameter with updated value", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/params/testparam")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(1);
+                res.body[0].should.be.eql("arrayvalue");
                 done();
             });
         });

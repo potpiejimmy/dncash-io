@@ -1,7 +1,12 @@
+-- MySQL Workbench Forward Engineering
+
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
+-- -----------------------------------------------------
+-- Schema dncashio
+-- -----------------------------------------------------
 
 -- -----------------------------------------------------
 -- Table `customer`
@@ -13,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
   `password` VARCHAR(128) NOT NULL,
   `display_name` VARCHAR(128) NULL,
   `roles` VARCHAR(255) NOT NULL DEFAULT 'user',
+  `twofasecret` VARCHAR(32) NULL,
   `status` TINYINT NOT NULL DEFAULT 0,
   `info` VARCHAR(255) NULL,
   PRIMARY KEY (`id`),
@@ -129,6 +135,61 @@ CREATE TABLE IF NOT EXISTS `journal` (
   INDEX `fk_journal_customer1_idx` (`customer_id` ASC),
   CONSTRAINT `fk_journal_customer1`
     FOREIGN KEY (`customer_id`)
+    REFERENCES `customer` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `customer_param`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `customer_param` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `customer_id` INT NOT NULL,
+  `pkey` VARCHAR(45) NOT NULL,
+  `pvalue` VARCHAR(1024) NULL,
+  `updated` TIMESTAMP NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (`id`),
+  INDEX `fk_customer_param_customer1_idx` (`customer_id` ASC),
+  UNIQUE INDEX `pkey_customer_UNIQUE` (`customer_id` ASC, `pkey` ASC),
+  CONSTRAINT `fk_customer_param_customer1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `customer` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `clearing`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `clearing` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `token_id` INT NOT NULL,
+  `debitor_id` INT NOT NULL,
+  `creditor_id` INT NOT NULL,
+  `debitor_account` VARCHAR(128) NOT NULL,
+  `creditor_account` VARCHAR(128) NOT NULL,
+  `status` TINYINT NOT NULL DEFAULT 0,
+  `created` TIMESTAMP NOT NULL DEFAULT NOW(),
+  `updated` TIMESTAMP NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_clearing_token1_idx` (`token_id` ASC),
+  INDEX `fk_clearing_customer1_idx` (`debitor_id` ASC),
+  INDEX `fk_clearing_customer2_idx` (`creditor_id` ASC),
+  CONSTRAINT `fk_clearing_token1`
+    FOREIGN KEY (`token_id`)
+    REFERENCES `token` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_clearing_customer1`
+    FOREIGN KEY (`debitor_id`)
+    REFERENCES `customer` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_clearing_customer2`
+    FOREIGN KEY (`creditor_id`)
     REFERENCES `customer` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
