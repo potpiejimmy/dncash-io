@@ -20,10 +20,23 @@ export const clearingApiV1: Router = Router();
  *         type: string
  *         description: the unique token UUID involved in the cash process
  *         example: '916eb12e-4e8a-4833-8e78-be40115829e7'
+ *       type:
+ *         type: string
+ *         enum: [CASHOUT,CASHIN]
+ *         required: true
+ *         example: CASHOUT
  *       refname:
  *         type: string
- *         description: custom reference name or number as specified by the token creator
+ *         description: custom reference name or number of the token as specified by the token creator
  *         example: bookref_08154711
+ *       tokendevice:
+ *         type: string
+ *         description: custom reference name of the token device (token device refname)
+ *         example: custommobile123
+ *       cashdevice:
+ *         type: string
+ *         description: custom reference name of the cash device (cash device refname)
+ *         example: ATM-0001
  *       amount:
  *         type: number
  *         description: amount in smallest symbol units (e.g. cents)
@@ -35,11 +48,21 @@ export const clearingApiV1: Router = Router();
  *         required: true
  *         example: EUR
  *       debitor:
- *         type: object
- *         description: debitor account information
+ *         $ref: '#/definitions/clearing_account_info'
  *       creditor:
- *         type: object
- *         description: creditor account information
+ *         $ref: '#/definitions/clearing_account_info'
+ *   clearing_account_info:
+ *     type: object
+ *     description: clearing account information
+ *     properties:
+ *       name:
+ *         type: string
+ *         description: Account name
+ *         example: Test Bank AG
+ *       iban:
+ *         type: string
+ *         description: Account IBAN
+ *         example: DE1001100152389572932
  */
 
 // ------- clearing data ---------------------

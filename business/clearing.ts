@@ -15,8 +15,8 @@ export function addClearing(token_id: number, debitor_id: number, creditor_id: n
 
 export function getClearingData(customer_id: number): Promise<any> {
     return db.querySingle(
-        "select c.created as date,uuid,refname,amount,symbol,debitor_account as debitor, creditor_account as creditor "+
-        "from clearing c join token t on c.token_id=t.id "+
+        "select c.created as date,t.uuid,t.type,t.refname,td.refname as tokendevice,cd.refname as cashdevice,amount,symbol,debitor_account as debitor, creditor_account as creditor "+
+        "from clearing c join token t on c.token_id=t.id join customer_device td on t.owner_device_id=td.id join customer_device cd on t.lock_device_id=cd.id "+
         "where debitor_id=? or creditor_id=?", [
                 customer_id, customer_id
         ]).then(res => {

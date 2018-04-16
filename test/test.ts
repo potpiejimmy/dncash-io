@@ -361,6 +361,19 @@ describe("admin.v1:", () => {
             });
         });
     });
+
+    describe("Set a parameter 'clearing-account' (ok) | PUT /params/clearing-account", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/params/clearing-account")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({name:"Max Mustermann", iban:"DE1234123412341234"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
 });
 
 /** Testing /routes/tokenapi.v1.ts **/
@@ -524,14 +537,14 @@ describe("cashapi.v1:", () => {
             .post("/dnapi/cash/v1/devices")
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
-            .send({refname:'testdevice1', info:{workstationId:'ATM0001'}})
+            .send({refname:'ATM1', info:{workstationId:'ATM0001'}})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
                 res.body.should.have.property('refname');
                 res.body.should.have.property('type');
                 res.body.should.have.property('info');
-                res.body.refname.should.be.eql('testdevice1');
+                res.body.refname.should.be.eql('ATM1');
                 res.body.type.should.be.eql('ATM');
                 res.body.should.have.property('uuid');
                 atmUid1 = res.body.uuid;
@@ -546,14 +559,14 @@ describe("cashapi.v1:", () => {
             .post("/dnapi/cash/v1/devices")
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
-            .send({refname:'testdevice2', info:{workstationId:'ATM0002'}})
+            .send({refname:'ATM2', info:{workstationId:'ATM0002'}})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
                 res.body.should.have.property('refname');
                 res.body.should.have.property('type');
                 res.body.should.have.property('info');
-                res.body.refname.should.be.eql('testdevice2');
+                res.body.refname.should.be.eql('ATM2');
                 res.body.type.should.be.eql('ATM');
                 res.body.should.have.property('uuid');
                 atmUid2 = res.body.uuid;
@@ -879,6 +892,9 @@ describe("clearingapi.v1:", () => {
                 res.body.length.should.be.eql(1);
                 res.body[0].should.have.property('refname');
                 res.body[0].refname.should.be.eql('custref1234');
+                res.body[0].should.have.property('debitor');
+                res.body[0].debitor.should.have.property('iban');
+                res.body[0].debitor.iban.should.be.eql('DE1234123412341234');
                 done();
             });
         });
