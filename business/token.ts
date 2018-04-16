@@ -215,7 +215,7 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
             }
 
             // now check for cross-customer access
-            if (token.owner_id != cashDevice.customer_id) {
+            if (!config.ALLOW_INTER_CUSTOMER_CLEARING && token.owner_id != cashDevice.customer_id) {
                 // The cash device and the token device belong to different
                 // customers ("Fremdkundenaus/einzahlung")
                 // Apply sophisticated rules here in the future allowing
