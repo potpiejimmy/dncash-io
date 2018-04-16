@@ -41,6 +41,7 @@ import { tokenApiV1 } from "./routes/tokenapi.v1";
 import { tokenApiV1Ws } from "./routes/tokenapi.v1.ws";
 import { cashApiV1 } from "./routes/cashapi.v1";
 import { mobileApiV1 } from "./routes/mobileapi.v1";
+import { clearingApiV1 } from "./routes/clearingapi.v1";
 
 app.use(nocache());
 app.use(json());
@@ -73,6 +74,8 @@ app.use("/dnapi/admin/v1", jwtauth.verifyToken(), routerAdminV1);
 app.use("/dnapi/token/v1", apiauth.verifyAccess, apiauth.verifyTokenApi, apiauth.verifyCustomer, tokenApiV1);
 // High-security route for Cash API using DB-verified access secret:
 app.use("/dnapi/cash/v1", apiauth.verifyAccess, apiauth.verifyCashApi, apiauth.verifyCustomer, cashApiV1);
+// High-security route for Clearing API using DB-verified access secret:
+app.use("/dnapi/clearing/v1", apiauth.verifyAccess, apiauth.verifyClearingApi, apiauth.verifyCustomer, clearingApiV1);
 // Mobile API (intentionally unsecured, since it provides the secure trigger API)
 app.use("/dnapi/mobile/v1", mobileApiV1);
 

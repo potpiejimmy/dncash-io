@@ -19,6 +19,10 @@ export function verifyCashApi(request: Request, response: Response, next: NextFu
     return verifyApi(request, response, next, 'cash-api');
 }
 
+export function verifyClearingApi(request: Request, response: Response, next: NextFunction) {
+    return verifyApi(request, response, next, 'clearing-api');
+}
+
 export function verifyCustomer(request: Request, response: Response, next: NextFunction) {
     if (request.method == 'OPTIONS') return next();
     Login.findUserById(request.access.customer_id).then(user => {

@@ -1,6 +1,7 @@
 import * as db from "../util/db";
 import * as Device from "./device";
 import * as Journal from "./journal";
+import * as Clearing from './clearing';
 import * as crypto from 'crypto';
 import * as constants from 'constants';
 import * as forge from 'node-forge';
@@ -157,11 +158,23 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
                 // re-read and export:
                 return findById(token.id).then(t => {
                     Journal.journalize(customer.id, "token", "confirm", t);
-                    return exportToken(t)
+                    // add to clearing and export
+                    return clearToken(t, customer.id).then(() => exportToken(t));
                 });
             });
         });        
     });
+}
+
+function clearToken(token: any, cash_customer_id: number): Promise<void> {
+    if (token.state === 'COMPLETED')  {
+        if (token.type === 'CASHOUT') {
+            return Clearing.addClearing(token.id, token.owner_id, cash_customer_id);
+        } else if (token.type === 'CASHIN') {
+            return Clearing.addClearing(token.id, cash_customer_id, token.owner_id);
+        }
+    }
+    return Promise.resolve();
 }
 
 function cleanUpExpired(): Promise<void> {

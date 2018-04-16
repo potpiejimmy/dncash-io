@@ -17,6 +17,9 @@ export const tokenApiV1: Router = Router();
  *   - name: Mobile API
  *     description: The Mobile API holds operations to be executed from potentially untrusted
  *                  devices such as mobile phones.
+ *   - name: Clearing API
+ *     description: The Clearing API provides access to account clearing information to be
+ *                  used for settlement processes.
  * 
  * definitions:
  *   unauthorized:

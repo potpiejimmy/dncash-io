@@ -19,6 +19,8 @@ let tokenApiKey;
 let tokenApiSecret;
 let cashApiKey;
 let cashApiSecret;
+let clearingApiKey;
+let clearingApiSecret;
 let mobileUid;
 let atmUid1;
 let atmUid2;
@@ -160,6 +162,25 @@ describe("admin.v1:", () => {
         });
     });
 
+    let clearingApiId;
+    describe("Create access Clearing API (ok) | POST /access", () => {
+        it("should create new API credentials (clearing-api)", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/access")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({scope:'clearing-api'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('id');
+                res.body.should.have.property('scope');
+                res.body.scope.should.be.eql('clearing-api');
+                clearingApiId = res.body.id;
+                done();
+            });
+        });
+    });
+
     describe("Read access Token API (ok) | GET /access?scope=token-api", () => {
         it("should return array of API credentials, length 1", done => {
             chai.request(app)
@@ -262,6 +283,24 @@ describe("admin.v1:", () => {
                 res.body.should.have.property('apisecret');
                 cashApiKey = res.body.apikey;
                 cashApiSecret = res.body.apisecret;
+                done();
+            });
+        });
+    });
+
+    describe("Read Clearing API secret (ok) | PUT /access/:id", () => {
+        it("should return API key and secret (clearing-api)", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/access/"+clearingApiId)
+            .set("authorization", "Bearer "+sessionToken)
+            .send({password:"12345678"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('apikey');
+                res.body.should.have.property('apisecret');
+                clearingApiKey = res.body.apikey;
+                clearingApiSecret = res.body.apisecret;
                 done();
             });
         });
@@ -415,7 +454,7 @@ describe("tokenapi.v1:", () => {
             .post("/dnapi/token/v1/tokens")
             .set("DN-API-KEY", tokenApiKey)
             .set("DN-API-SECRET", tokenApiSecret)
-            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR'})
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234'})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -805,6 +844,41 @@ describe("tokenapi.v1 (continue):", () => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
                 res.body.length.should.be.eql(0);
+                done();
+            });
+        });
+    });
+});
+
+/** Testing /routes/clearingapi.v1.ts **/
+
+describe("clearingapi.v1:", () => {
+
+    describe("Read clearing data (bad credentials) | GET /", () => {
+        it("should return HTTP 401", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1")
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(401);
+                done();
+            });
+        });
+    });
+
+    describe("Read clearing data (ok) | GET /", () => {
+        it("should return one clearing with refname 'custref1234'", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1")
+            .set("DN-API-KEY", clearingApiKey)
+            .set("DN-API-SECRET", clearingApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(1);
+                res.body[0].should.have.property('refname');
+                res.body[0].refname.should.be.eql('custref1234');
                 done();
             });
         });
