@@ -75,7 +75,7 @@ Use the portal app to register new customers such as banks or merchants. Use the
 
 ### 2. Register token devices (end-user smartphones)
 
-When a pre-authorized token is created by the bank on behalf of a bank customer, the secure access code that is needed to redeem the cash token later is encrypted with the public key of a target device so that the cash token can only be redeemed with physical access to the end-user's smartphone. Therefore, each smartphone needs to create a secure public-private-key-pair and the public key then needs to be registered with dncash-io. The banking typically calls the 'register token device' API endpoint once when a bank user agrees to the Terms and Conditions of the cash service in the banking app or when the bank user uses the cash service for the first time.
+When a pre-authorized token is created by the bank on behalf of a bank customer, the secure access code that is needed to redeem the cash token later is encrypted with the public key of a target device so that the cash token can only be redeemed with physical access to the end-user's smartphone. Therefore, each smartphone needs to create a secure public-private-key-pair and the public key then needs to be registered with dncash-io. The banking backend typically calls the 'register token device' API endpoint once when a bank user agrees to the Terms and Conditions of the cash service in the banking app or when the bank user uses the cash service for the first time.
 
 Using the bank's Token API credentials, the bank sends the device's public key along with a custom reference name (and optional additional data in the info field):
 
@@ -95,7 +95,7 @@ The service responds with a new, unique UUID that is used from then one as the d
 
 ### 3. Create cash tokens
 
-When the bank customer requests the creation of a new cashin or cashout cash token in his or her app, the banking backend performs the usual authorization and account pre-checks first and then calls dncash-io to create a new cash token. The returned token’s secure code can only be decrypted on the token device holding the corresponding private key. The token server does not store the original plain code, so that even compromised token data cannot be used by someone else without physical access to the target device. The request body must at least contain the information about the amount, currency symbol, type and the target device_uuid. Optional fields may hold the validity time, denomination data and a custom reference name or ID.
+When the bank customer requests the creation of a new cashin or cashout cash token in his or her app, the banking backend performs the usual authorization and account pre-checks first and then calls dncash-io to create a new cash token. The returned token’s secure code can only be decrypted on the token device holding the corresponding private key. The token server does not store the unencrypted secure code, so that even a compromised database cannot be used by someone else without physical access to the target device. The request body must at least contain the information about the amount, currency symbol, type and the target device_uuid. Optional fields may hold the validity time, denomination data and a custom reference name or ID.
 
     {
       "device_uuid": "916eb12e-4e8a-4833-8e78-be40115829e7",
@@ -139,7 +139,7 @@ The response contains a unique token UUID, a secure_code and, optionally, a plai
 
 ### 4. Display token in banking App
 
-The returned token should be send back to the target device app and the app may then display the cash token in one of the following ways:
+The returned token should be sent back to the target device app and the app may then display the cash token in one of the following ways:
 
 1. Display the token UUID + the hex encoded decrypted secure_code as a QR code to be scanned by an ATM or cash device.
 2. Display the plain_code as a barcode and/or number on the screen to be typed in at a cash point.
