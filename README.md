@@ -23,6 +23,10 @@ Initial setup (DDL):
     
     mysql -udncashio -p dncashio < db/scripts/create.sql
 
+### Redis
+
+To support trigger and websocket notifications in a load-balancing environment with multiple servers, Redis is used to propagate notification events between all instances. In a single instance environment, installation of Redis is optional. Set the environment varaible USE_REDIS true if you want to use redis (also set REDIS_URL if Redis is not running locally).
+
 ### Install / Build
 
 Enter
@@ -174,10 +178,10 @@ The UUID should be stored on the cash device for identification.
 When the bank customer arrives at a cash point, a specific communication process will take place eventually leading to the verification and locking of the cash token presented by the bank customer. dncash-io supports the following three modes of operation for that communication process out-of-the-box:
 
 1. Scanning of the QR code displayed on the smartphone by the ATM/cash point. This mode offers highest security regarding the token verification process (directly performed by the cash device), works in smartphone-offline mode (for instance, with bad mobile network coverage), but is prone to skimming attacks.
-2. Scanning a barcode or manually typing in a short plain code (for instance, 6 to 10 digits), for instance by the cashier in a retail store. This mode offers lower token security, but can be used at retail stores and in manual input scenarios where no other form of automated communication between token device and cash device can be used.
-3. Initiating the creation of a random trigger code on the cash machine, either displaying the trigger code as a QR code on the cash machine's screen or preparing it for sending it out via NFC, then scanning or NFC-receiving of that trigger code by the token device (smartphone) and starting the claiming process from the smartphone for the cash token to be pushed onto the cash machine by dncash-io. This mode offers the highest form of security, but it needs mobile network coverage and the process and system architecture involved is a bit more complicated due to the needed pushing mechanism.
+2. Scanning a barcode or manually typing in a short plain code (for instance, 6 to 10 digits), for instance by the cashier in a retail store. This mode offers lower token security, but can be used at retail stores equipped with barcode scanners and in manual input scenarios where no other form of automated communication between token device and cash device can be used.
+3. Initiating the creation of a random trigger code on the cash machine, either displaying the trigger code as a QR code on the cash machine's screen or preparing it for sending it out via NFC, then scanning or NFC-receiving of that trigger code by the token device (smartphone) and starting the claiming process from the smartphone for the cash token to be pushed onto the cash machine by dncash-io. This mode offers the highest level of security, but it needs mobile network coverage and the process and system architecture involved is a bit more complicated due to the needed pushing mechanism.
 
-In all of the above modes, the claimed cash tokens will be atomically verified and locked. The token's lock will from the on be permanently associated with the cash device and only the cash device that has successfully claimed/locked the token may update/confirm the token.
+In all of the above modes, the claimed cash tokens will be atomically verified and locked. The token's lock will from then on be permanently associated with the cash device and only the cash device that has successfully claimed/locked the token may update/confirm the token.
 
 ### 7. Confirm tokens from cash devices
 

@@ -1,15 +1,38 @@
 import * as uuid from "uuid/v4"; // Random-based UUID
 import * as Device from "./device";
 import * as Token from "./token";
+import * as redis from 'redis';
 import * as config from "../config";
 
 class TriggerEntry {
+    triggercode: string;
     expires: number;
     cashDeviceId: number;
     response: any;
 }
 
 let triggerMap: Map<string, TriggerEntry> = new Map();
+
+let redisSubscriber;
+let redisPublisher;
+
+if (config.USE_REDIS) {
+    if (config.REDIS_URL) {
+        redisSubscriber = redis.createClient({url:config.REDIS_URL});
+        redisPublisher = redis.createClient({url:config.REDIS_URL});
+    } else {
+        redisSubscriber = redis.createClient();
+        redisPublisher = redis.createClient();
+    }
+    redisSubscriber.on('message', (channel,message) => {
+        if (channel === 'register') {
+            let t = JSON.parse(message);
+            triggerMap[t.triggercode] = t;
+        } else if (channel === 'notify') {
+            // TODO
+        }
+    });
+}
 
 function cleanUp() {
     // clean out expired entries:
@@ -32,6 +55,7 @@ export function createTrigger(customer: any, device_uuid: string): Promise<any> 
         while (triggerMap[triggercode]) triggercode = uuid();
 
         triggerMap[triggercode] = {
+            triggercode: triggercode,
             expires: Date.now() + config.TRIGGER_CODE_VALIDITY_SECONDS * 1000,
             cashDeviceId: cashDevice.id
         };
