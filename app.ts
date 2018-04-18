@@ -12,6 +12,7 @@ import { json } from 'body-parser';
 import * as nocache from 'nocache';
 import * as morgan from 'morgan';
 
+import * as redis from './util/redis';
 import * as swagger from './util/swagger';
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
@@ -106,11 +107,15 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
     });
 });
 
-logging.logger.info("Server initialized successfully");
+redis.waitForRedisReady().then(() => {
 
-// listen:
-let port = process.env.PORT || 3000;
-app.listen(port, () => logging.logger.info('dncash.io is up and running, listening on port ' + port));
+    logging.logger.info("Server initialized successfully");
+
+    // listen:
+    let port = process.env.PORT || 3000;
+    app.listen(port, () => logging.logger.info('dncash.io is up and running, listening on port ' + port));
+
+});
 
 // export app for test code:
 module.exports = app;

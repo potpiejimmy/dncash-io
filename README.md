@@ -25,7 +25,7 @@ Initial setup (DDL):
 
 ### Redis
 
-To support trigger and websocket notifications in a load-balancing environment with multiple servers, Redis is used to propagate notification events between all instances. In a single instance environment, installation of Redis is optional. Set the environment varaible USE_REDIS true if you want to use redis (also set REDIS_URL if Redis is not running locally).
+Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS_URL=redis://host:port if Redis is not running locally.
 
 ### Install / Build
 

@@ -1,11 +1,10 @@
 import * as uuid from "uuid/v4"; // Random-based UUID
 import * as Device from "./device";
 import * as Token from "./token";
-import * as redis from 'redis';
+import * as redis from '../util/redis';
 import * as config from "../config";
 
 class TriggerEntry {
-    triggercode: string;
     expires: number;
     cashDeviceId: number;
     response: any;
@@ -15,23 +14,17 @@ let triggerMap: Map<string, TriggerEntry> = new Map();
 
 let redisSubscriber;
 let redisPublisher;
+let redisTriggerMap;
 
-if (config.USE_REDIS) {
-    if (config.REDIS_URL) {
-        redisSubscriber = redis.createClient({url:config.REDIS_URL});
-        redisPublisher = redis.createClient({url:config.REDIS_URL});
-    } else {
-        redisSubscriber = redis.createClient();
-        redisPublisher = redis.createClient();
-    }
+if (redis.isEnabled()) {
+    redisSubscriber = redis.createClient();
+    redisPublisher = redis.createClient();
+    redisTriggerMap = redis.createClient();
     redisSubscriber.on('message', (channel,message) => {
-        if (channel === 'register') {
-            let t = JSON.parse(message);
-            triggerMap[t.triggercode] = t;
-        } else if (channel === 'notify') {
-            // TODO
-        }
+        let data = JSON.parse(message);
+        localSendToken(data.triggercode, data.token);
     });
+    redisSubscriber.subscribe('trigger');
 }
 
 function cleanUp() {
@@ -50,41 +43,79 @@ export function createTrigger(customer: any, device_uuid: string): Promise<any> 
     return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
         if (!cashDevice) throw "Sorry, device with UUID " + device_uuid + " not found.";
 
-        // create a new and unique id
+        // create a new unique id
         let triggercode = uuid();
-        while (triggerMap[triggercode]) triggercode = uuid();
-
-        triggerMap[triggercode] = {
-            triggercode: triggercode,
+        let trigger = {
             expires: Date.now() + config.TRIGGER_CODE_VALIDITY_SECONDS * 1000,
             cashDeviceId: cashDevice.id
         };
 
-        // return the new trigger code
-        return {
+        triggerMap[triggercode] = trigger;
+
+        let result = {
             triggercode: triggercode
         };
+
+        let response = Promise.resolve();
+        if (redis.isEnabled())
+            response = response.then(() => redis.setValue(redisTriggerMap, triggercode, trigger, config.TRIGGER_CODE_VALIDITY_SECONDS));
+
+        // return the new trigger code
+        return response.then(() => result);
     });
 }
 
-export function registerTrigger(customer: any, triggercode: string): Promise<TriggerEntry> {
+export function registerTrigger(customer: any, triggercode: string, tokenReceiver: any): Promise<TriggerEntry> {
     cleanUp();
 
-    let trigger = triggerMap[triggercode];
-    if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
+    return getTrigger(triggercode).then(trigger => {
+        if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
 
-    return Promise.resolve(trigger);
+        // set response field in local trigger
+        trigger.response = tokenReceiver;
+    });
 }
 
 export function notifyTrigger(triggercode: string, radio_code: string): Promise<any> {
-    let trigger = triggerMap[triggercode];
-    if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
+    return getTrigger(triggercode).then(trigger => {
+        if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
 
-    return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radio_code).then(t => {
-        // return token and trigger
-        return {
-            token: t,
-            trigger: trigger
-        }
+        return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radio_code).then(t => {
+            // send the token out
+            sendToken(triggercode, t);
+        });
     });
+}
+
+function getTrigger(triggercode: string): Promise<TriggerEntry> {
+    let trigger = triggerMap[triggercode];
+    if (!trigger && redis.isEnabled()) {
+        // read from redis if not locally available
+        return redis.getValue(redisTriggerMap, triggercode).then(trigger => {
+            if (trigger) triggerMap[triggercode] = trigger;
+            return trigger;  
+        });
+
+    } else {
+        return Promise.resolve(trigger);
+    }
+}
+
+function sendToken(triggercode: string, token: any) {
+    if (redis.isEnabled()) {
+        redisPublisher.publish('trigger', JSON.stringify({
+            triggercode: triggercode,
+            token: token
+        }));
+    } else {
+        localSendToken(triggercode, token);
+    }
+}
+
+function localSendToken(triggercode: string, token: any) {
+    let trigger = triggerMap[triggercode];
+    // do nothing if not known locally
+    if (!trigger || !trigger.response) return;
+    // send the token to the trigger registrar
+    trigger.response.json(token);
 }

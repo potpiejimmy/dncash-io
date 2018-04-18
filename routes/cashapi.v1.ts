@@ -277,7 +277,7 @@ cashApiV1.post("/trigger", function (request: Request, response: Response, next:
  *           $ref: '#/definitions/unauthorized'
  */
 cashApiV1.get("/trigger/:triggercode", function (request: Request, response: Response, next: NextFunction) {
-    Trigger.registerTrigger(request.user, request.params.triggercode)
-    .then(res => res.response = response) // store response in trigger entry
+    Trigger.registerTrigger(request.user, request.params.triggercode, response)
+    .then(() => {}) // wait until triggered
     .catch(err => next(err));
 });

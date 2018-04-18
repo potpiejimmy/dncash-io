@@ -29,19 +29,18 @@ let radioCodeIn;
 let tokenUid;
 let triggerCode;
 
-function purgeDB(done) {
-    db.connection().then(c => {
+function purgeDB(): Promise<void> {
+    return db.connection().then(c => {
         let tables = ['clearing','journal','token','customer_device','customer_access','customer_param','customer'];
         tables.forEach(t => db.query(c, "delete from " + t));
         c.release();
-        console.log("** DB purged **\n");
-        done();
+        console.log("\n** DB purged **\n");
     })
 }
 
 // start with a clean DB
-before(done => purgeDB(done));
-//after(done => purgeDB(done));
+before(() => purgeDB());
+//after(() => purgeDB());
 
 /** Testing /routes/admin.v1.auth.ts **/
 

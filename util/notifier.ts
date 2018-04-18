@@ -1,6 +1,4 @@
-import * as redis from 'redis';
-import * as logging from './logging';
-import * as cfg from '../config';
+import * as redis from './redis';
 
 class RedisNotifier {
 
@@ -9,21 +7,10 @@ class RedisNotifier {
     redisPublisher;
     
     constructor() {
-        if (cfg.USE_REDIS) {
-            if (cfg.REDIS_URL) {
-                this.redisSubscriber = redis.createClient({url:cfg.REDIS_URL});
-                this.redisPublisher = redis.createClient({url:cfg.REDIS_URL});
-            } else {
-                this.redisSubscriber = redis.createClient();
-                this.redisPublisher = redis.createClient();
-            }
+        if (redis.isEnabled()) {
+            this.redisSubscriber = redis.createClient();
+            this.redisPublisher = redis.createClient();
 
-            this.redisSubscriber.on('ready', () => {
-                logging.logger.info("Redis ready");
-            });
-            this.redisSubscriber.on('error', err => {
-                logging.logger.error("Redis not ready: " + err);
-            });
             this.redisSubscriber.on('message', (channel,message) => {
                 this.localNotifyObservers(channel, JSON.parse(message));
             });
@@ -55,7 +42,7 @@ class RedisNotifier {
     }
 
     notifyObservers(scope: string, payload: any) {
-        if (cfg.USE_REDIS)
+        if (redis.isEnabled())
             this.redisPublisher.publish(scope, JSON.stringify(payload));
         else
             this.localNotifyObservers(scope, payload);

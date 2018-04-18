@@ -40,8 +40,6 @@ export const mobileApiV1: Router = Router();
 mobileApiV1.put("/trigger/:triggercode", function (request: Request, response: Response, next: NextFunction) {
     Trigger.notifyTrigger(request.params.triggercode, request.body.radiocode)
     .then(res => {
-        // send the token to the trigger registrar
-        res.trigger.response.json(res.token);
         response.status(204).send();
     })
     .catch(err => next(err));
