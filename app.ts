@@ -107,15 +107,19 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
     });
 });
 
-redis.waitForRedisReady().then(() => {
+export let appReady = redis.waitForRedisReady().then(() => {
 
     logging.logger.info("Server initialized successfully");
 
-    // listen:
-    let port = process.env.PORT || 3000;
-    app.listen(port, () => logging.logger.info('dncash.io is up and running, listening on port ' + port));
-
+    return new Promise(resolve => {
+        // listen:
+        let port = process.env.PORT || 3000;
+        app.listen(port, () => {
+            logging.logger.info('dncash.io is up and running, listening on port ' + port)
+            resolve();
+        });
+    });
 });
 
-// export app for test code:
-module.exports = app;
+// export app for test code in test/test.ts
+export let testApp = app;

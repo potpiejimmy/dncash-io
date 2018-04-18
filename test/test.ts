@@ -6,8 +6,8 @@ import * as chai from 'chai';
 import * as chaiHttp from 'chai-http';
 import * as crypto from 'crypto';
 import * as constants from 'constants';
-import * as app from '../app';
 import * as db from '../util/db';
+import {testApp as app, appReady} from '../app';
 
 let should = chai.should();
 
@@ -38,8 +38,8 @@ function purgeDB(): Promise<void> {
     })
 }
 
-// start with a clean DB
-before(() => purgeDB());
+// wait for app to be ready, then start with a clean DB
+before(() => appReady.then(()=>purgeDB()));
 //after(() => purgeDB());
 
 /** Testing /routes/admin.v1.auth.ts **/
