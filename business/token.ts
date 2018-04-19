@@ -28,14 +28,21 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.uuid = uid;
             token.owner_id = customer.id;
             token.owner_device_id = device.id;
-            // create plain code (from a secure random int32) (will be globally unique)
-            // used for low security barcodes / manual modes only (retail)
-            // do not create a plain code for systems using radio or scanning to achieve higher security with secure codes only
-            let plain_code = parseInt(crypto.randomBytes(4).toString('hex'), 16) % Math.pow(10,config.DEFAULT_PLAIN_CODE_LEN);
-            token.plain_code = (""+(Math.pow(10,config.DEFAULT_PLAIN_CODE_LEN)+plain_code)).substr(1);
-            // create secure code
-            let secure_code = crypto.randomBytes(config.DEFAULT_SECURE_CODE_LEN);
-            token.secure_code = encryptTokenCode(device.pubkey, secure_code);
+
+            let secure_code_buf;
+            if (config.USE_PLAIN_CODES) {
+                // create plain code (from a secure random int32) (will be globally unique)
+                // used for low security barcodes / manual modes only (retail)
+                // do not create a plain code for systems using radio or scanning to achieve higher security with secure codes only
+                token.plain_code = Utils.getSecureRandomFixedLengthDecimalString(config.DEFAULT_PLAIN_CODE_LEN);
+                // in plain code mode, use only integer ascii characters as secure code
+                secure_code_buf = Buffer.from(Utils.getSecureRandomFixedLengthDecimalString(config.DEFAULT_SECURE_CODE_LEN));
+            } else {
+                // create secure code as random bytes
+                secure_code_buf = crypto.randomBytes(config.DEFAULT_SECURE_CODE_LEN);
+            }
+            token.secure_code = encryptTokenCode(device.pubkey, secure_code_buf);
+
             token.info = JSON.stringify(token.info); // save info data as string
             if (token.expires) token.expires = new Date(token.expires);
             return insertNew(token).then(id => findById(id)).then(t => {
@@ -193,11 +200,12 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
         // Radio Code Banking QR: 36 characters token UUID + decrypted secure code in hex
         codetype = "long";
         token_id = radio_code.substring(0,36);
-        code = new Buffer(radio_code.substring(36), 'hex');
+        code = Buffer.from(radio_code.substring(36), 'hex');
     } else {
         // Radio Code Retail EAN-13: short decimal plain code
         codetype = "short";
-        token_id = radio_code;
+        token_id = radio_code.substring(0,config.DEFAULT_PLAIN_CODE_LEN);
+        code = Buffer.from(radio_code.substring(config.DEFAULT_PLAIN_CODE_LEN));
     }
 
     // look up the token to find the associated token device
@@ -206,12 +214,12 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
 
         // fetch the token device with its associated public key:
         return Device.findById(token.owner_device_id).then(tokenDevice => {
-            // compare the encrypted token codes:
-            if (codetype === "long") {
-                // check the secure code
-                if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) throw "Invalid token code.";
-            } else {
-                // no secure code check for short EAN codes
+            // check the secure code
+            if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) {
+                // REJECT token, allow no retries
+                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
+                    throw "Invalid token code.";
+                });
             }
 
             // now check for cross-customer access

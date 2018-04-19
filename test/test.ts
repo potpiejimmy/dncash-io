@@ -24,7 +24,9 @@ let clearingApiSecret;
 let mobileUid;
 let atmUid1;
 let atmUid2;
-let radioCodeOut;
+let radioCodeOut1;
+let radioCodeOut2;
+let radioCodeOutPlain;
 let radioCodeIn;
 let tokenUid;
 let triggerCode;
@@ -460,7 +462,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("Create CASHOUT token (ok) | POST /tokens", () => {
+    describe("Create CASHOUT token 1 (ok) | POST /tokens", () => {
         it("should create new token of type CASHOUT", done => {
             chai.request(app)
             .post("/dnapi/token/v1/tokens")
@@ -477,10 +479,52 @@ describe("tokenapi.v1:", () => {
                 res.body.should.not.have.property('id');
                 res.body.should.have.property('secure_code');
                 res.body.should.have.property('uuid');
-                radioCodeOut = res.body.uuid + crypto.privateDecrypt({
+                radioCodeOut1 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
                 }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                done();
+            });
+        });
+    });
+
+    describe("Create CASHOUT token 2 (ok) | POST /tokens", () => {
+        it("should create new token of type CASHOUT", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/tokens")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", tokenApiSecret)
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('secure_code');
+                res.body.should.have.property('uuid');
+                radioCodeOut2 = res.body.uuid + crypto.privateDecrypt({
+                    key: keypair.private,
+                    padding: constants.RSA_PKCS1_PADDING
+                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                done();
+            });
+        });
+    });
+
+    describe("Create CASHOUT token 3 with plain code (ok) | POST /tokens", () => {
+        it("should create new token of type CASHOUT", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/tokens")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", tokenApiSecret)
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                chai.should().exist(res.body.plain_code);
+                chai.should().exist(res.body.secure_code);
+                radioCodeOutPlain = res.body.plain_code + crypto.privateDecrypt({
+                    key: keypair.private,
+                    padding: constants.RSA_PKCS1_PADDING
+                }, new Buffer(res.body.secure_code, 'base64')).toString();
                 done();
             });
         });
@@ -511,7 +555,7 @@ describe("tokenapi.v1:", () => {
     });
 
     describe("Read tokens (ok) | GET /tokens?device_uuid=:uuid", () => {
-        it("should return array of tokens in state OPEN, length 2", done => {
+        it("should return array of tokens in state OPEN, length 4", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?device_uuid="+mobileUid)
             .set("DN-API-KEY", tokenApiKey)
@@ -519,7 +563,7 @@ describe("tokenapi.v1:", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(2);
+                res.body.length.should.be.eql(4);
                 done();
             });
         });
@@ -574,10 +618,10 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("Claim token (wrong secure code) | GET /tokens/:radiocode with wrong secure code", () => {
+    describe("Claim token 1 (wrong secure code) | GET /tokens/:radiocode with wrong secure code", () => {
         it("should return HTTP 403 with message 'Invalid token code'", done => {
             chai.request(app)
-            .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"ff?device_uuid="+atmUid1)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOut1+"ff?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
             .end((err, res) => {
@@ -590,10 +634,27 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("Claim token (ok) | /tokens/:radiocode with correct secure code", () => {
+    describe("Claim token 1 (correct secure code) | /tokens/:radiocode with correct secure code", () => {
+        it("should respond 'not in OPEN state' because already rejected", done => {
+            chai.request(app)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOut1+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(403);
+                res.body.should.be.a('object');
+                res.body.should.have.property('error');
+                res.body.error.should.contain('not in OPEN state');
+                tokenUid = res.body.uuid;
+                done();
+            });
+        });
+    });
+
+    describe("Claim token 2 (ok) | /tokens/:radiocode with correct secure code", () => {
         it("should verify and lock token", done => {
             chai.request(app)
-            .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"?device_uuid="+atmUid1)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOut2+"?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
             .end((err, res) => {
@@ -608,17 +669,35 @@ describe("cashapi.v1:", () => {
         });
     });
 
-    describe("Claim token again (fail) | GET /tokens/:radiocode with correct secure code, 2nd", () => {
-        it("should return HTTP 403 with message 'Invalid token code'", done => {
+    describe("Claim token 2 again (fail) | GET /tokens/:radiocode with correct secure code, 2nd", () => {
+        it("should return HTTP 403 with message 'not in OPEN state'", done => {
             chai.request(app)
-            .get("/dnapi/cash/v1/tokens/"+radioCodeOut+"?device_uuid="+atmUid1)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOut2+"?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
             .end((err, res) => {
                 res.should.have.status(403);
                 res.body.should.be.a('object');
                 res.body.should.have.property('error');
-                res.body.error.should.contain('Invalid');
+                res.body.error.should.contain('not in OPEN state');
+                done();
+            });
+        });
+    });
+
+    describe("Claim token 3 with plain code (ok) | /tokens/:radiocode with plain code + secure code", () => {
+        it("should verify and lock token", done => {
+            chai.request(app)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOutPlain+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('LOCKED');
+                res.body.should.have.property('uuid');
+                tokenUid = res.body.uuid;
                 done();
             });
         });
@@ -808,7 +887,7 @@ describe("tokenapi.v1 (continue):", () => {
     });
 
     describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
-        it("should return one remaining token with clearstate 0", done => {
+        it("should return three remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -816,7 +895,7 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(1);
+                res.body.length.should.be.eql(3);
                 res.body[0].should.have.property('clearstate');
                 res.body[0].clearstate.should.be.eql(0);
                 res.body[0].should.have.property('uuid');
@@ -846,8 +925,8 @@ describe("tokenapi.v1 (continue):", () => {
         });
     });
 
-    describe("Read filtered tokens, clearstate 0 (empty) | GET /tokens?clearstate=0", () => {
-        it("should return empty array", done => {
+    describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
+        it("should return two remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -855,7 +934,10 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(0);
+                res.body.length.should.be.eql(2);
+                res.body[0].should.have.property('clearstate');
+                res.body[0].clearstate.should.be.eql(0);
+                res.body[0].should.have.property('uuid');
                 done();
             });
         });
