@@ -13,13 +13,27 @@ export function addClearing(token_id: number, debitor_id: number, creditor_id: n
            }])));
 }
 
-export function getClearingData(customer_id: number): Promise<any> {
-    return db.querySingle(
+export function getClearingData(customer_id: number, filters: any): Promise<any> {
+    let stmt: string =
         "select c.created as date,t.uuid,t.type,t.refname,td.refname as tokendevice,cd.refname as cashdevice,amount,symbol,debitor_account as debitor, creditor_account as creditor "+
         "from clearing c join token t on c.token_id=t.id join customer_device td on t.owner_device_id=td.id join customer_device cd on t.lock_device_id=cd.id "+
-        "where debitor_id=? or creditor_id=?", [
-                customer_id, customer_id
-        ]).then(res => {
+        "where (debitor_id=? or creditor_id=?)";
+
+    let params: any = [customer_id, customer_id];
+
+    if (filters.from) {
+        stmt += " and c.created>=?";
+        params.push(new Date(filters.from));
+    }
+    if (filters.to) {
+        stmt += " and c.created<?";
+        params.push(new Date(filters.to));
+    }
+    if (filters.type) {
+        stmt += " and t.type=?";
+        params.push(filters.type);
+    }
+    return db.querySingle(stmt, params).then(res => {
             res.forEach(c => {
                 c.debitor = JSON.parse(c.debitor);
                 c.creditor = JSON.parse(c.creditor);

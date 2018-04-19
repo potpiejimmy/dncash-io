@@ -148,7 +148,7 @@ The response contains a unique token UUID, a secure_code and, optionally, a plai
 The returned token should be sent back to the target device app and the app may then display the cash token in one of the following ways:
 
 1. Display the token UUID + the decrypted hex encoded secure_code as a QR code to be scanned by an ATM or cash device.
-2. Display the plain_code as a barcode and/or number on the screen to be typed in at a cash point.
+2. Display the plain_code + the decrypted ASCII encoded secure code as a barcode and/or number on the screen to be typed in at a cash point.
 3. Display only general token information such as amount and/or ID, creation or expiration date without any barcode or QR code. This can be used in scenarios where the cash device does not scan or receive information from the app, but instead identification data is scanned or received by the smartphone from the cash device using a trigger code. This can be done via a scannable QR-code on the cash device or via NFC.
 
 ### 5. Register cash devices (ATMs, cash registers)
@@ -210,12 +210,12 @@ In an intra-bank/single customer scenario, the processes in step 8 and 9 may be 
         "amount": 10000,
         "symbol": "EUR",
         "debitor": {
-          "name": "Test Bank AG",
+          "name": "Issuer Bank AG",
           "iban": "DE1001100152389572932"
         },
         "creditor": {
-          "name": "Test Bank AG",
-          "iban": "DE1001100152389572932"
+          "name": "Retailer Bank Ltd.",
+          "iban": "DE5005005012345678901"
         }
       }
     ]

@@ -335,7 +335,7 @@ tokenApiV1.get("/devices/:uid", function (request: Request, response: Response, 
  *     summary: Creates a new cash token
  *     description: Creates a new cash token, secured for the given token device. The new token's secure code
  *                  can only be decrypted on the token device holding the corresponding private key.
- *                  The token server does not store the original plain code, so that even compromised
+ *                  The token server does not store the original unencrypted secure code, so that even compromised
  *                  token data cannot be used by someone else without physical access to the target device.
  *                  The request body must at least contain the information about the amount, currency symbol,
  *                  type and the target device_uuid. Other fields are optional. The info field is an 

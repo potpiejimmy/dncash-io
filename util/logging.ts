@@ -29,6 +29,6 @@ export let logger = new winston.Logger({
 /* used by morgan to log HTTP requests */
 export let stream = {
     write: function(message, encoding) {
-        logger.info(message);
+        logger.verbose(message);
     }
 };
