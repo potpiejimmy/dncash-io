@@ -67,9 +67,21 @@ For development with auto-restart on save (nodemon), start the server using
 
 dncash-io uses Winston for logging. The main server log file is server.log. Check ./util/logging.ts to see how the logging is configured.
 
-### DevOps / Deploy AWS
+### DevOps / Deploy on AWS
 
-To deploy to AWS Elastic Beanstalk, install the AWS EB CLI. Then run
+To deploy to an Elastic Beanstalk instance from the command line, install the AWS EB CLI. Create an IAM user for API access credentials on AWS. Create a Node.js environment in EB with the name "dncash-io-env" via
+
+    eb create dncash-io-env
+
+This will create a load-balanced EB environment for Node.js. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+
+    mysql -h aws-rds-endpoint-host ...
+
+Set the DB_HOST environment variable in the EB environment configuration to point to the database endpoint.
+
+For SSL, set up a Route 53 domain name and request a wildcard certificate in Certificate Manager. Connect the Hosted Zone to the EB's load balancer via an Alias entry in the Hosted Zone. Next, setup an HTTPS listener on the load balancer using the certificate.
+
+For deployment from the console, simply run:
 
     npm run deploy
 
