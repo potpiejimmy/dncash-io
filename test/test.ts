@@ -375,6 +375,19 @@ describe("admin.v1:", () => {
             });
         });
     });
+
+    describe("Set a parameter 'USE_PLAIN_CODES' (ok) | PUT /params/USE_PLAIN_CODES", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/params/USE_PLAIN_CODES")
+            .set("authorization", "Bearer "+sessionToken)
+            .send("\"false\"")
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
 });
 
 /** Testing /routes/tokenapi.v1.ts **/

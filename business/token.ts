@@ -2,6 +2,7 @@ import * as db from "../util/db";
 import * as Device from "./device";
 import * as Journal from "./journal";
 import * as Clearing from './clearing';
+import * as Param from './param';
 import * as crypto from 'crypto';
 import * as constants from 'constants';
 import * as forge from 'node-forge';
@@ -18,7 +19,8 @@ export function createToken(customer: any, token: any): Promise<any> {
         let retries = 10;
         let createdToken: any;
 
-        return Utils.asyncWhile(() => retries > 0, () => {
+        return Param.readParam(customer.id, "USE_PLAIN_CODES").then(USE_PLAIN_CODES => 
+               Utils.asyncWhile(() => retries > 0, () => {
             // create secure UUID
             let uid = uuid();
             delete token.device_uuid;
@@ -30,7 +32,7 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.owner_device_id = device.id;
 
             let secure_code_buf;
-            if (config.USE_PLAIN_CODES) {
+            if (config.USE_PLAIN_CODES || USE_PLAIN_CODES) {
                 // create plain code (from a secure random int32) (will be globally unique)
                 // used for low security barcodes / manual modes only (retail)
                 // do not create a plain code for systems using radio or scanning to achieve higher security with secure codes only
@@ -55,7 +57,7 @@ export function createToken(customer: any, token: any): Promise<any> {
                 if (retries) logging.logger.warn(err);
                 else logging.logger.error(err);
             });
-        }).then(() => {
+        })).then(() => {
             if (createdToken) return createdToken;
             throw "Token could not be created in database";
         });
