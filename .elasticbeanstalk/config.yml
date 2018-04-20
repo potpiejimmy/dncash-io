@@ -1,6 +1,6 @@
 branch-defaults:
   develop:
-    environment: dncash-io-env
+    environment: dncash-io-dev
 global:
   application_name: dncash-io
   branch: null

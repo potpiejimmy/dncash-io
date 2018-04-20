@@ -69,11 +69,11 @@ dncash-io uses Winston for logging. The main server log file is server.log. Chec
 
 ### DevOps / Deploy on AWS
 
-To deploy to an Elastic Beanstalk instance from the command line, install the AWS EB CLI. Create an IAM user for API access credentials on AWS. Create a Node.js environment in EB with the name "dncash-io-env" via
+To deploy to an Elastic Beanstalk instance from the command line, install the AWS EB CLI. Create an IAM user for API access credentials on AWS. Type "eb init" to set up your API credentials. Create a Node.js environment in EB with the name "dncash-io-dev" and an "application load balancer (ALB)" via
 
-    eb create dncash-io-env
+    eb create dncash-io-dev --elb-type application
 
-This will create a load-balanced EB environment for Node.js. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+This will create a load-balanced EB environment for Node.js. The ALB is needed for websockets support. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
     mysql -h aws-rds-endpoint-host ...
 
