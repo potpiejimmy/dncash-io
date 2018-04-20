@@ -1,6 +1,6 @@
 branch-defaults:
   develop:
-    environment: node-express-env
+    environment: dncash-io-env
 global:
   application_name: dncash-io
   branch: null

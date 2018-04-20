@@ -67,6 +67,12 @@ For development with auto-restart on save (nodemon), start the server using
 
 dncash-io uses Winston for logging. The main server log file is server.log. Check ./util/logging.ts to see how the logging is configured.
 
+### DevOps / Deploy AWS
+
+To deploy to AWS Elastic Beanstalk, install the AWS EB CLI. Then run
+
+    npm run deploy
+
 ### User Interface / Portal App
 
 The frontend for dncash-io can be found in the dnash-io-ui repository. The frontend (an Angular web app) can be statically deployed on any web server and communicates with dncash-io only through a specific frontend REST interface. Therefore, along with the other mentioned public APIs for Token, Cash and Clearing, dncash-io has an internal Admin API defined in ./routes/admin.v1.ts (not part of the public API docs).
