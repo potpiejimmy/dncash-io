@@ -39,6 +39,7 @@
     "node-fetch": "^2.0.0",
     "node-forge": "^0.7.2",
     "redis": "^2.8.0",
+    "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^1.9.7",
     "swagger-ui-express": "^2.0.15",
     "uuid": "^3.2.1",

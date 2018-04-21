@@ -4,8 +4,29 @@ import * as Device from "../business/device";
 import * as Token from "../business/token";
 import * as Journal from "../business/journal";
 import * as Param from "../business/param";
+import * as Login from "../business/login";
 
 export const routerAdminV1: Router = Router();
+
+// ------ two-factor auth ---------------
+
+/*
+ * Starts initialization for 2FA for the currently authenticated 
+ */
+routerAdminV1.get("/auth/twofa", function (request: Request, response: Response, next: NextFunction) {
+    Login.initialize2FA(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Enables 2FA for the currently authenticated if initial token is correct
+ */
+routerAdminV1.post("/auth/twofa", function (request: Request, response: Response, next: NextFunction) {
+    Login.enable2FA(request.user, request.body.token)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
 
 // ------ access ------------------------
 
@@ -103,6 +124,15 @@ routerAdminV1.get("/params/:pkey", function (request: Request, response: Respons
  */
 routerAdminV1.put("/params/:pkey", function (request: Request, response: Response, next: NextFunction) {
     Param.writeParam(request.user.id, request.params.pkey, request.body)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * Deletes a parameter for the authenticated user
+ */
+routerAdminV1.delete("/params/:pkey", function (request: Request, response: Response, next: NextFunction) {
+    Param.removeParam(request.user.id, request.params.pkey)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

@@ -1,7 +1,9 @@
 import * as fetch from "node-fetch";
 import * as crypto from "crypto";
 import * as FormData from 'form-data';
+import * as speakeasy from 'speakeasy';
 import * as db from "../util/db";
+import * as Param from "./param";
 import * as jwtauth from "../util/jwtauth";
 
 class BadLogin {
@@ -94,3 +96,34 @@ function verifyCaptcha(captcha : string) : Promise<any> {
             console.log(err);
         });
 };
+
+// --- two-factor authentication ---
+
+/**
+ * Creates temporary 2FA secret, stores it temporarily to params
+ * and returns the OTP auth URL and secret.
+ */
+export function initialize2FA(user: any): Promise<any> {
+    let secret = speakeasy.generateSecret({length: 20});
+    return Param.writeParam(user.id, "twofa_temp", secret.base32).then(() => {
+        return {
+            secret: secret.base32,
+            url: speakeasy.otpauthURL({secret: secret.ascii, label: 'dncash.io (' + user.email + ')'})
+        };
+    });
+}
+
+/**
+ * Verifies the initial token and if it is correct, enables 2FA
+ * by setting the temporary secret to customer.twofa field.
+ */
+export function enable2FA(user: any, token: string): Promise<any> {
+    return Param.readParam(user.id, "twofa_temp").then(base32secret => {
+        let verified = speakeasy.totp.verify({ secret: base32secret,
+            encoding: 'base32',
+            token: token });
+        if (!verified) throw "Invalid 2FA token";
+        return db.querySingle("update customer set twofasecret=? where id=?", [base32secret, user.id])
+               .then(()=>Param.removeParam(user.id, "twofa_temp"));
+    });
+}

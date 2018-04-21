@@ -363,6 +363,18 @@ describe("admin.v1:", () => {
         });
     });
 
+    describe("Delete a parameter (ok) | DELETE /params/:pkey", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .delete("/dnapi/admin/v1/params/testparam")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
     describe("Set a parameter 'clearing-account' (ok) | PUT /params/clearing-account", () => {
         it("should return HTTP 200 ok", done => {
             chai.request(app)

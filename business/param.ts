@@ -14,6 +14,10 @@ export function writeParam(customer_id: number, pkey: string, pvalue: any): Prom
     })
 }
 
+export function removeParam(customer_id: number, pkey: string): Promise<any> {
+    return deleteParam(customer_id, pkey);
+}
+
 function selectParam(customer_id: number, pkey: string): Promise<any> {
     return db.querySingle("select * from customer_param where customer_id=? and pkey=?", [customer_id, pkey]).then(res => res[0]);
 }
@@ -33,4 +37,8 @@ function updateParam(customer_id: number, pkey: string, pvalue: any): Promise<an
         customer_id,
         pkey
     ]);
+}
+
+function deleteParam(customer_id: number, pkey: string): Promise<any> {
+    return db.querySingle("delete from customer_param where customer_id=? and pkey=?", [customer_id, pkey]);
 }
