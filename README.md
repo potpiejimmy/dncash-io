@@ -77,17 +77,20 @@ This will create a load-balanced auto-scaling EB environment for Node.js. The AL
 
     mysql -h aws-rds-endpoint-host ...
 
-Set the DB_HOST environment variable in the EB environment configuration to point to the database endpoint.
+Set the DB_HOST environment property in the EB environment configuration to point to the database endpoint.
 
 For SSL, set up a Route 53 domain name and request a wildcard certificate in Certificate Manager. Connect the Hosted Zone to the EB's load balancer via an Alias entry in the Hosted Zone. Next, setup an HTTPS listener on the load balancer using the certificate.
 
-For notification support with multiple instances, set up a simple single Redis engine (e.g t2, micro) in ElastiCache. Then add an Inbound rule to the Redis cluster security group to allow TCP 6379 from the EB's security group. 
+For notification support with multiple instances, set up a simple single Redis engine (e.g t2, micro) in ElastiCache. Then add an Inbound rule to the Redis cluster security group to allow TCP 6379 from the EB's security group. Set the following environment properties in EB:
+
+    USE_REDIS=true
+    REDIS_URL=redis://elasticache-endpoint-host:6379
 
 For deployment from the console, simply run:
 
     npm run deploy
 
-Important note about websockets support: As of the time of this writing the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets. This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration is lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration).
+Important note about websockets support: As of the time of this writingm the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets. This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration.)
 
 ### User Interface / Portal App
 
