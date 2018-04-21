@@ -1,2 +1,9 @@
 node_modules
+/db
+/business
+/routes
+/test
+/util
 *.log
+*.md
+*.ts

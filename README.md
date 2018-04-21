@@ -73,7 +73,7 @@ To deploy to an Elastic Beanstalk instance from the command line, install the AW
 
     eb create dncash-io-dev --elb-type application
 
-This will create a load-balanced EB environment for Node.js. The ALB is needed for websockets support. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets support. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
     mysql -h aws-rds-endpoint-host ...
 
@@ -81,9 +81,13 @@ Set the DB_HOST environment variable in the EB environment configuration to poin
 
 For SSL, set up a Route 53 domain name and request a wildcard certificate in Certificate Manager. Connect the Hosted Zone to the EB's load balancer via an Alias entry in the Hosted Zone. Next, setup an HTTPS listener on the load balancer using the certificate.
 
+For notification support with multiple instances, set up a simple single Redis engine (e.g t2, micro) in ElastiCache. Then add an Inbound rule to the Redis cluster security group to allow TCP 6379 from the EB's security group. 
+
 For deployment from the console, simply run:
 
     npm run deploy
+
+Important note about websockets support: As of the time of this writing the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets. This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration is lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration).
 
 ### User Interface / Portal App
 
