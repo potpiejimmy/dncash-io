@@ -31,10 +31,19 @@ export function register(user: any): Promise<any> {
     });
 }
 
-export function login(email: string, password: string): Promise<any> {
+export function login(email: string, password: string, twofatoken: string, skip2fa: boolean = false): Promise<any> {
     return findUserByEmail(email).then(user => {
         if (user && crypto.createHash('sha256').update(password || '').digest("hex") == user.password) {
             delete badLogins[email];
+            if (user.twofasecret && !skip2fa) {
+                // if 2FA is enabled, check the token:
+                if (!twofatoken) return {"twofa": "Need 2FA token."};
+                try {
+                    verify2FAToken(user.twofasecret, twofatoken);
+                } catch (err) {
+                    return {"result": "Sorry, the token was incorrect."};
+                }
+            }
             return authenticate(user);
         } else {
             return handleBadLogins(email);
@@ -78,6 +87,11 @@ function readAndAuthenticate(email: string): Promise<any> {
 function authenticate(user): any {
     user.roles = user.roles.split(','); // roles as array
     delete user.password;
+    if (user.twofasecret) {
+        // add a role "twofa" if 2FA-enabled
+        user.roles.push("twofa");
+        delete user.twofasecret;
+    }
     let token = jwtauth.createToken(user);
     return {token:token};
 }
@@ -115,15 +129,23 @@ export function initialize2FA(user: any): Promise<any> {
 
 /**
  * Verifies the initial token and if it is correct, enables 2FA
- * by setting the temporary secret to customer.twofa field.
+ * by setting the temporary secret to customer.twofa field and
+ * returning a new, updated JWT.
  */
 export function enable2FA(user: any, token: string): Promise<any> {
     return Param.readParam(user.id, "twofa_temp").then(base32secret => {
-        let verified = speakeasy.totp.verify({ secret: base32secret,
-            encoding: 'base32',
-            token: token });
-        if (!verified) throw "Invalid 2FA token";
+        verify2FAToken(base32secret, token);
         return db.querySingle("update customer set twofasecret=? where id=?", [base32secret, user.id])
-               .then(()=>Param.removeParam(user.id, "twofa_temp"));
+               .then(()=>Param.removeParam(user.id, "twofa_temp"))
+               .then(()=>findUserById(user.id))
+               // issue a new JWT with the role 'twofa'
+               .then(u=>authenticate(u));
     });
+}
+
+function verify2FAToken(base32secret: string, token: string): void {
+    if (!speakeasy.totp.verify({ secret: base32secret,
+        encoding: 'base32',
+        token: token
+    })) throw "Invalid 2FA token";
 }

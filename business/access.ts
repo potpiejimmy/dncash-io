@@ -46,7 +46,7 @@ export function findByCustomerAndScope(customer: any, scope: string): Promise<an
 }
 
 export function findByCustomerAndId(customer: any, password: string, id: number): Promise<any> {
-    return Login.login(customer.email, password).then(res => {
+    return Login.login(customer.email, password, null, true).then(res => {
         if (res.token) // authentication successful?
             // Note: this makes sure the ID belongs to the customer ID
             return db.querySingle("select * from customer_access where customer_id=? and id=?", [customer.id, id]).then(res => res[0]); 
