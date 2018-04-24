@@ -122,7 +122,7 @@ export function initialize2FA(user: any): Promise<any> {
     return Param.writeParam(user.id, "twofa_temp", secret.base32).then(() => {
         return {
             secret: secret.base32,
-            url: speakeasy.otpauthURL({secret: secret.ascii, label: 'dncash.io (' + user.email + ')'})
+            url: speakeasy.otpauthURL({secret: secret.ascii, label: encodeURIComponent('dncash.io (' + user.email + ')')})
         };
     });
 }
@@ -141,6 +141,15 @@ export function enable2FA(user: any, token: string): Promise<any> {
                // issue a new JWT with the role 'twofa'
                .then(u=>authenticate(u));
     });
+}
+
+/**
+ * Disables 2FA for the given user
+ */
+export function disable2FA(user: any): Promise<any> {
+    return db.querySingle("update customer set twofasecret=null where id=?", [user.id])
+    .then(()=>findUserById(user.id))
+    .then(u=>authenticate(u));
 }
 
 function verify2FAToken(base32secret: string, token: string): void {

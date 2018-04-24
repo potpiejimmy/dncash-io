@@ -11,7 +11,7 @@ export const routerAdminV1: Router = Router();
 // ------ two-factor auth ---------------
 
 /*
- * Starts initialization for 2FA for the currently authenticated 
+ * Starts initialization for 2FA for the currently authenticated user
  */
 routerAdminV1.get("/auth/twofa", function (request: Request, response: Response, next: NextFunction) {
     Login.initialize2FA(request.user)
@@ -20,10 +20,19 @@ routerAdminV1.get("/auth/twofa", function (request: Request, response: Response,
 });
 
 /*
- * Enables 2FA for the currently authenticated if initial token is correct
+ * Enables 2FA for the currently authenticated user if initial token is correct
  */
 routerAdminV1.post("/auth/twofa", function (request: Request, response: Response, next: NextFunction) {
     Login.enable2FA(request.user, request.body.token)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Disables 2FA for the currently authenticated user
+ */
+routerAdminV1.delete("/auth/twofa", function (request: Request, response: Response, next: NextFunction) {
+    Login.disable2FA(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
