@@ -1,5 +1,6 @@
 import * as db from "../util/db";
 import * as crypto from "crypto";
+import * as base32 from 'base32';
 import * as Login from "./login";
 import * as config from '../config';
 
@@ -7,8 +8,8 @@ export function createApiKey(customer: any, scope: string): Promise<any> {
     if (!config.API_SCOPES.includes(scope)) throw "Unknown scope: " + scope;
 
     // create secure random numbers:
-    let key = crypto.randomBytes(48).toString('base64');
-    let secret = crypto.randomBytes(48).toString('base64');
+    let key = base32.encode(crypto.randomBytes(40));
+    let secret = base32.encode(crypto.randomBytes(40));
 
     // check if unique key:
     return findByKey(key).then(res => {

@@ -22,12 +22,12 @@ export const tokenApiV1Ws: Router = Router();
  *       - application/json
  *     parameters:
  *       - name: listenKey
- *         description: The "listen key" is the Token API Key (DN-API-KEY) converted from its Base64 representation to a hex string.
+ *         description: The "listen key" is the Token API Key (DN-API-KEY).
  *                      If the listen key is incorrect, the websocket is closed immediately from the remote end.
  *         in: path
  *         required: true
  *         type: string
- *         example: 461736a05219a2decc988ead849dbed3ec2e4e2eeaa982f576c4445fd0552ee818f1a1454cbc3fa7fadc3570eba56136
+ *         example: 8tgbqp8rxxby5bkp1kf9nm47k2m8yyepnxw3tpebntw1n5c8g49zmu30f83tqhn1
  *     responses:
  *       200:
  *         description: Sends out a token UUID in the below format every time a token changes.
@@ -41,7 +41,7 @@ export const tokenApiV1Ws: Router = Router();
  */
 tokenApiV1Ws.ws("/tokenchange/:listenKey", function (ws: WebSocket, req: Request) {
     let wsid = uuid();
-    Access.findByKey(Buffer.from(req.params.listenKey, 'hex').toString('base64')).then(access => {
+    Access.findByKey(req.params.listenKey).then(access => {
         if (!access) {
             ws.close();
             return;
