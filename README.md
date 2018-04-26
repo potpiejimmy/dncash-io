@@ -6,6 +6,10 @@ Each customer that registers with dncash-io typically uses one or more of the fo
 2. __Cash API__: The Cash API is used by secure cash devices such as ATMs and cash registers. It provides methods to verify, lock and confirm cash tokens with the service.
 3. __Clearing API__: The Clearing API provides access to account clearing information to be used for settlement processes.
 
+## Live Demo
+
+Go to https://dncash.dnpv-serv.de, use dncash/nixdorf as landing page credentials.
+
 ## Development Setup
 
 dncash-io is based on Node.js and Express. It is written in Typescript. It uses a MySQL-compatible database as its main data storage.
@@ -73,7 +77,9 @@ To deploy to an Elastic Beanstalk instance from the command line, install the AW
 
     eb create dncash-io-dev --elb-type application
 
-This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets support. In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets and SSL support. Increase the load balancer's Idle Timeout attribute to a higher value to avoid closing websockets every 60 seconds.
+
+In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
     mysql -h aws-rds-endpoint-host ...
 
@@ -90,7 +96,7 @@ For deployment from the console, simply run:
 
     npm run deploy
 
-Important note about websockets support: As of the time of this writingm the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets. This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration.)
+Important note about websockets support: As of the time of this writingm the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets (and increases the socket idle timeout to 3600s). This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration.)
 
 ### User Interface / Portal App
 
