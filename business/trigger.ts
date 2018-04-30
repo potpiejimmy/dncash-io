@@ -3,6 +3,7 @@ import * as Device from "./device";
 import * as Token from "./token";
 import * as redis from '../util/redis';
 import * as config from "../config";
+import { SignedStringData } from "../util/utils";
 
 class TriggerEntry {
     expires: number;
@@ -76,11 +77,11 @@ export function registerTrigger(customer: any, triggercode: string, tokenReceive
     });
 }
 
-export function notifyTrigger(triggercode: string, radio_code: string): Promise<any> {
+export function notifyTrigger(triggercode: string, radiocode: string, signature: string): Promise<any> {
     return getTrigger(triggercode).then(trigger => {
         if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
 
-        return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radio_code).then(t => {
+        return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radiocode, null/*new SignedStringData(triggercode + radiocode, signature)*/).then(t => {
             // send the token out
             sendToken(triggercode, t);
         });

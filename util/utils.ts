@@ -21,3 +21,29 @@ export function getSecureRandomFixedLengthDecimalString(len: number): string {
     let rndInt = parseInt(crypto.randomBytes(4).toString('hex'), 16) % padder;
     return (""+(padder+rndInt)).substr(1); // fills with zeros from the left
 }
+
+/**
+ * Helper class that carries string data with a base-64 encoded signature
+ * and a helper method to verify the signature with a given key
+ */
+export class SignedStringData {
+
+    constructor(
+        /* Treated as UTF-8 for signature calculation */
+        private data: string,
+        /* Base-64 encoded signature */
+        private signature: string
+    ) {}
+
+    /**
+     * Verifies the signature of this signed data object using the given
+     * public key.
+     * @param pubkey a public key, PEM-encoded
+     */
+    verify(pubkey: string): boolean {
+        let verify: crypto.Verify = crypto.createVerify("SHA256");
+        verify.write(this.data);
+        verify.end();
+        return verify.verify(pubkey, this.signature, "base64");
+    }
+}

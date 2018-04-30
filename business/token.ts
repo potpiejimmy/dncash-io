@@ -142,9 +142,9 @@ export function verifyAndLock(customer: any, device_uuid: string, radio_code: st
     });
 }
 
-export function verifyAndLockByTrigger(device_id: number, radio_code: string): Promise<any> {
+export function verifyAndLockByTrigger(device_id: number, radio_code: string, signedData: Utils.SignedStringData): Promise<any> {
     return Device.findById(device_id).then(cashDevice => {
-        return verifyAndLockImpl(cashDevice, radio_code);
+        return verifyAndLockImpl(cashDevice, radio_code, signedData);
     });
 }
 
@@ -190,7 +190,7 @@ function cleanUpExpired(): Promise<void> {
     return db.querySingle("update token set state='EXPIRED',plain_code=null,secure_code='' where state='OPEN' and expires<NOW()");
 }
 
-function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
+function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Utils.SignedStringData = null): Promise<any> {
 
     let codetype: string;
     let token_id: string;
@@ -216,6 +216,16 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string): Promise<any> {
 
         // fetch the token device with its associated public key:
         return Device.findById(token.owner_device_id).then(tokenDevice => {
+
+            // we use the signedData as an additional layer of security if the
+            // token device itself is the one that is verifying the token through
+            // the Mobile API using a trigger code.
+            if (signedData) {
+                if (!signedData.verify(tokenDevice.pubkey)) {
+                    throw "Invalid signature.";
+                }
+            }
+
             // check the secure code
             if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) {
                 // REJECT token, allow no retries

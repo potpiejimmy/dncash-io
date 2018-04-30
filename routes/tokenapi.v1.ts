@@ -15,8 +15,8 @@ export const tokenApiV1: Router = Router();
  *   - name: Cash API
  *     description: The Cash API is used by secure cash devices such as ATMs and cash registers.
  *   - name: Mobile API
- *     description: The Mobile API holds operations to be executed from potentially untrusted
- *                  devices such as mobile phones.
+ *     description: The Mobile API holds secure operations that can be directly executed from
+ *                  mobile devices.
  *   - name: Clearing API
  *     description: The Clearing API provides access to account clearing information to be
  *                  used for settlement processes.
