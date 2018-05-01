@@ -27,7 +27,8 @@ let atmUid2;
 let radioCodeOut1;
 let radioCodeOut2;
 let radioCodeOutPlain;
-let radioCodeIn;
+let radioCodeIn1;
+let radioCodeIn2;
 let tokenUid;
 let triggerCode;
 
@@ -555,7 +556,7 @@ describe("tokenapi.v1:", () => {
         });
     });
 
-    describe("Create CASHIN token (ok) | POST /tokens (CASHIN)", () => {
+    describe("Create CASHIN token 1 (ok) | POST /tokens (CASHIN)", () => {
         it("should create new token of type CASHIN", done => {
             chai.request(app)
             .post("/dnapi/token/v1/tokens")
@@ -570,7 +571,28 @@ describe("tokenapi.v1:", () => {
                 res.body.should.not.have.property('id');
                 res.body.should.have.property('secure_code');
                 res.body.should.have.property('uuid');
-                radioCodeIn = res.body.uuid + crypto.privateDecrypt({
+                radioCodeIn1 = res.body.uuid + crypto.privateDecrypt({
+                    key: keypair.private,
+                    padding: constants.RSA_PKCS1_PADDING
+                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                done();
+            });
+        });
+    });
+
+    describe("Create CASHIN token 2 (ok) | POST /tokens (CASHIN)", () => {
+        it("should create new token of type CASHIN", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/tokens")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", tokenApiSecret)
+            .send({device_uuid:mobileUid, type:'CASHIN', amount:0, symbol: 'EUR'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('secure_code');
+                res.body.should.have.property('uuid');
+                radioCodeIn2 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
                 }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
@@ -580,7 +602,7 @@ describe("tokenapi.v1:", () => {
     });
 
     describe("Read tokens (ok) | GET /tokens?device_uuid=:uuid", () => {
-        it("should return array of tokens in state OPEN, length 4", done => {
+        it("should return array of tokens in state OPEN, length 5", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?device_uuid="+mobileUid)
             .set("DN-API-KEY", tokenApiKey)
@@ -588,7 +610,7 @@ describe("tokenapi.v1:", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(4);
+                res.body.length.should.be.eql(5);
                 done();
             });
         });
@@ -802,7 +824,7 @@ describe("cashapi.v1:", () => {
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
             .end((err, res) => {
-                // Note: these will be checked with next test case on
+                // Note: these will be checked with next successful test case on
                 // PUT /dnapi/mobile/v1/trigger/:triggercode
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -821,15 +843,37 @@ describe("cashapi.v1:", () => {
 
 describe("mobileapi.v1:", () => {
 
-    describe("Claim and trigger (ok) | PUT /trigger/:triggercode", () => {
-        it("should response with HTTP 204 no content and trigger ATM", done => {
+    describe("Claim and trigger, wrong signature (fail) | PUT /trigger/:triggercode", () => {
+        it("should response with HTTP 500 and message 'Invalid signature'", done => {
             chai.request(app)
-            .put("/dnapi/mobile/v1/trigger/"+triggerCode)
+            .post("/dnapi/mobile/v1/trigger")
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
-            .send({radiocode:radioCodeIn})
+            .send({triggercode:triggerCode,radiocode:radioCodeIn1,signature:'abcdefgh'})
+            .end((err, res) => {
+                res.should.have.status(500);
+                res.body.should.be.a('object');
+                res.body.should.have.property('message');
+                res.body.message.should.contain('Invalid signature');
+                done();
+            });
+        });
+    });
+
+    describe("Claim and trigger (ok) | PUT /trigger/:triggercode", () => {
+        it("should response with HTTP 204 no content and trigger ATM", done => {
+            let sign = crypto.createSign("SHA256");
+            sign.write(triggerCode+radioCodeIn2);
+            let signature = sign.sign(keypair.private).toString('base64');
+            chai.request(app)
+            .post("/dnapi/mobile/v1/trigger")
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .send({triggercode:triggerCode,radiocode:radioCodeIn2, signature: signature})
             .end((err, res) => {
                 res.should.have.status(204);
+                // note that here the waiting test case on the Cash API
+                // is triggered setting the variable tokenUid 
                 done();
             });
         });
@@ -912,7 +956,7 @@ describe("tokenapi.v1 (continue):", () => {
     });
 
     describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
-        it("should return three remaining tokens with clearstate 0", done => {
+        it("should return four remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -920,7 +964,7 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(3);
+                res.body.length.should.be.eql(4);
                 res.body[0].should.have.property('clearstate');
                 res.body[0].clearstate.should.be.eql(0);
                 res.body[0].should.have.property('uuid');
@@ -951,7 +995,7 @@ describe("tokenapi.v1 (continue):", () => {
     });
 
     describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
-        it("should return two remaining tokens with clearstate 0", done => {
+        it("should return three remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -959,7 +1003,7 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(2);
+                res.body.length.should.be.eql(3);
                 res.body[0].should.have.property('clearstate');
                 res.body[0].clearstate.should.be.eql(0);
                 res.body[0].should.have.property('uuid');

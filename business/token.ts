@@ -222,7 +222,10 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
             // the Mobile API using a trigger code.
             if (signedData) {
                 if (!signedData.verify(tokenDevice.pubkey)) {
-                    throw "Invalid signature.";
+                    // REJECT token, allow no retries
+                    return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
+                        throw "Invalid signature.";
+                    });
                 }
             }
 

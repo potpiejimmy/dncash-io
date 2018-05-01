@@ -81,7 +81,7 @@ export function notifyTrigger(triggercode: string, radiocode: string, signature:
     return getTrigger(triggercode).then(trigger => {
         if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
 
-        return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radiocode, null/*new SignedStringData(triggercode + radiocode, signature)*/).then(t => {
+        return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radiocode, new SignedStringData(triggercode + radiocode, signature)).then(t => {
             // send the token out
             sendToken(triggercode, t);
         });
