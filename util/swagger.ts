@@ -7,7 +7,7 @@ export function setup(app: any): void {
         swaggerDefinition: {
             info: {
                 title: 'dncash.io', // Title (required) 
-                version: '1.0.0' // Version (required) 
+                version: process.env.npm_package_version // Version (required) 
             },
         },
         apis: ['./routes/*'], // Path to the API docs 
