@@ -14,7 +14,7 @@ Go to https://dncash.dnpv-serv.de, use dncash/nixdorf as landing page credential
 
 dncash-io is based on Node.js and Express. It is written in Typescript. It uses a MySQL-compatible database as its main data storage.
 
-### Database - MySQL or compatible
+### Database - MySQL 5.x or compatible
 
 Create a UTF8 database named 'dncashio' with credentials 'dncashio'/'dncashio':
 
@@ -43,7 +43,7 @@ to install all dependencies and to compile the Typescript code. To manually buil
 
 ### Test
 
-dncash-io used Mocha and Chai as testing frameworks. Run a complete set of test cases by calling
+dncash-io uses Mocha and Chai as testing frameworks. Run a complete set of test cases by calling
 
     npm test
 
@@ -63,7 +63,7 @@ and check the API docs at
     
 ### Develop
 
-For development with auto-restart on save (nodemon), start the server using
+For development with auto-restart on save (using nodemon), start the server using
 
     npm run develop
 
@@ -77,7 +77,7 @@ To deploy to an Elastic Beanstalk instance from the command line, install the AW
 
     eb create dncash-io-dev --elb-type application
 
-This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets and SSL support. Increase the load balancer's Idle Timeout attribute to a higher value to avoid closing websockets every 60 seconds.
+This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets and SSL support. Increase the load balancer's Idle Timeout attribute to a higher value to avoid closing websockets every 60 seconds (you can do that in the AWS web console).
 
 In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
@@ -90,13 +90,13 @@ For SSL, set up a Route 53 domain name and request a wildcard certificate in Cer
 For notification support with multiple instances, set up a simple single Redis engine (e.g t2, micro) in ElastiCache. Then add an Inbound rule to the Redis cluster security group to allow TCP 6379 from the EB's security group. Set the following environment properties in EB:
 
     USE_REDIS=true
-    REDIS_URL=redis://elasticache-endpoint-host:6379
+    REDIS_URL=redis://<elasticache-endpoint-host>:6379
 
 For deployment from the console, simply run:
 
     npm run deploy
 
-Important note about websockets support: As of the time of this writingm the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets (and increases the socket idle timeout to 3600s). This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix. (TODO: add a fixed, permanent Nginx configuration.)
+Important note about websockets support: As of the time of this writing, the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets (and increases the socket idle timeout to 3600s). This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix.
 
 ### User Interface / Portal App
 
@@ -122,7 +122,7 @@ Using the bank's Token API credentials, the bank sends the device's public key a
       }
     }
 
-The service responds with a new, unique UUID that is used from then one as the device identification and for creating cash tokens for that device:
+The service responds with a new, unique UUID that is used from then on as the device identification and for creating cash tokens for that device:
 
     {
       "uuid": "256fb6a1-23c6-41b0-8e59-1824d1342d1f"

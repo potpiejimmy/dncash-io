@@ -90,12 +90,12 @@ export const clearingApiV1: Router = Router();
  *         type: string
  *       - name: from
  *         type: string
- *         description: Return clearing with data greater or equals than the given date
+ *         description: Return clearing data with a date greater than or equal to the given date
  *         in: query
  *         example: '2018-01-01T00:00:00Z'
  *       - name: to
  *         type: string
- *         description: Return clearing with data less than the given date
+ *         description: Return clearing data with a date less than the given date
  *         in: query
  *         example: '2018-02-01T00:00:00Z'
  *       - name: type
