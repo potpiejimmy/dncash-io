@@ -121,7 +121,7 @@ export const tokenApiV1: Router = Router();
  *          example: EUR
  *        type:
  *          type: string
- *          enum: [CASHOUT,CASHIN]
+ *          enum: [CASHOUT,CASHIN,TRANSFER,PAYMENT,OTHER]
  *          required: true
  *          example: CASHOUT
  *        expires:
@@ -182,12 +182,12 @@ export const tokenApiV1: Router = Router();
  *          example: EUR
  *        type:
  *          type: string
- *          enum: [CASHOUT,CASHIN]
+ *          enum: [CASHOUT,CASHIN,TRANSFER,PAYMENT,OTHER]
  *          example: CASHOUT
  *        state:
  *          type: string
  *          description: token state
- *          enum: [OPEN,DELETED,LOCKED,COMPLETED,FAILED,EXPIRED,CLEARED,CANCELED,REJECTED]
+ *          enum: [OPEN,DELETED,LOCKED,COMPLETED,FAILED,EXPIRED,CLEARED,CANCELED,REJECTED,RETRACTED]
  *          example: OPEN
  *        info:
  *          $ref: '#/definitions/token_info'

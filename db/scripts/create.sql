@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `token` (
   `uuid` VARCHAR(36) NOT NULL COMMENT 'the unique token UUID used for all-time token identification',
   `created` TIMESTAMP NOT NULL DEFAULT NOW() COMMENT 'time of creation',
   `updated` TIMESTAMP NULL COMMENT 'timestamp of last token update',
-  `type` ENUM('CASHOUT', 'CASHIN', 'PAYMENT', 'OTHER') NOT NULL DEFAULT 'CASHOUT' COMMENT 'token type',
+  `type` ENUM('CASHOUT', 'CASHIN', 'TRANSFER', 'PAYMENT', 'OTHER') NOT NULL DEFAULT 'CASHOUT' COMMENT 'token type',
   `code_type` TINYINT NOT NULL DEFAULT 0 COMMENT 'type of code, currently always 0, not used.',
   `plain_code` VARCHAR(32) NULL COMMENT 'the optional system-wide unique plain code (used as short identification codes). will only be set if USE_PLAIN_CODES is configured and only during the OPEN phase of a token, otherwise this field is NULL.',
   `secure_code` VARCHAR(1024) NOT NULL COMMENT 'random data encoded with the owner device’s public key, Base64-encoded',
