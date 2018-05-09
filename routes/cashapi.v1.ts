@@ -120,12 +120,14 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *     description: Updates the given token, thereby notifying the server about successful or failed cash processing.
  *                  You must specify the cash device UUID as a query parameter.
  *                  A token can only be updated by the device that has successfully transfered the token into the locked state before.
- *                  Only the token state can be updated, and only from state LOCKED to one of
+ *                  The token state may be updated only from state LOCKED to one of
  *                  COMPLETED (completed normally, amount to be settled),
  *                  FAILED (technical failure),
  *                  CANCELED (operation canceled by the user),
  *                  REJECTED (process rejected or aborted by the system),
  *                  RETRACTED (dispensed money retracted).
+ *                  Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference
+ *                  (will be part of the clearing information).
  *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional).
  *     tags:
  *       - Cash API

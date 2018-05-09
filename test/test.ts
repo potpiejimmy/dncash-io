@@ -773,7 +773,7 @@ describe("cashapi.v1:", () => {
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
-            .send({state:'COMPLETED'})
+            .send({state:'COMPLETED',lockrefname:'cashref1234'})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -1031,7 +1031,7 @@ describe("clearingapi.v1:", () => {
     });
 
     describe("Read clearing data (ok) | GET /", () => {
-        it("should return one clearing with refname 'custref1234'", done => {
+        it("should return one clearing with refnames 'custref1234' and 'cashref1234'", done => {
             chai.request(app)
             .get("/dnapi/clearing/v1")
             .set("DN-API-KEY", clearingApiKey)
@@ -1042,6 +1042,8 @@ describe("clearingapi.v1:", () => {
                 res.body.length.should.be.eql(1);
                 res.body[0].should.have.property('refname');
                 res.body[0].refname.should.be.eql('custref1234');
+                res.body[0].should.have.property('lockrefname');
+                res.body[0].lockrefname.should.be.eql('cashref1234');
                 res.body[0].should.have.property('debitor');
                 res.body[0].debitor.should.have.property('iban');
                 res.body[0].debitor.iban.should.be.eql('DE1234123412341234');

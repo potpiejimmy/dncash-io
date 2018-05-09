@@ -161,7 +161,7 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             if (!newData.amount) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 
-            return confirmLockedToken(token.id, newData.state, newData.amount).then(success => {
+            return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
                 tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: uid});
                 // re-read and export:
@@ -329,8 +329,8 @@ function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Pro
     return db.querySingle("update token set state=?,lock_device_id=?,updated=?,plain_code=null,secure_code='' where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
-function confirmLockedToken(id: number, newState: string, newAmount: number): Promise<boolean> {
-    return db.querySingle("update token set state=?,amount=?,updated=? where id=? and state='LOCKED'", [newState,newAmount,new Date(),id]).then(res => res.affectedRows);
+function confirmLockedToken(id: number, newState: string, lockrefname: string, newAmount: number): Promise<boolean> {
+    return db.querySingle("update token set state=?,lockrefname=?,amount=?,updated=? where id=? and state='LOCKED'", [newState,lockrefname,newAmount,new Date(),id]).then(res => res.affectedRows);
 }
 
 function updateToken(uid: string, newFields: any): Promise<boolean> {

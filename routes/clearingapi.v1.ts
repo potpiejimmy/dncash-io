@@ -25,18 +25,22 @@ export const clearingApiV1: Router = Router();
  *         enum: [CASHOUT,CASHIN]
  *         required: true
  *         example: CASHOUT
- *       refname:
- *         type: string
- *         description: custom reference name or number of the token as specified by the token creator
- *         example: bookref_08154711
  *       tokendevice:
  *         type: string
  *         description: custom reference name of the token device (token device refname)
  *         example: custommobile123
- *       cashdevice:
+ *       refname:
+ *         type: string
+ *         description: custom reference name or number of the token as specified by the token creator
+ *         example: bookref_08154711
+ *       lockdevice:
  *         type: string
  *         description: custom reference name of the cash device (cash device refname)
  *         example: ATM-0001
+ *       lockrefname:
+ *         type: string
+ *         description: custom reference name or number set by the cash device on token confirmation
+ *         example: cashtsa_000173
  *       amount:
  *         type: number
  *         description: amount in smallest symbol units (e.g. cents)

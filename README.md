@@ -216,7 +216,7 @@ In all of the above modes, the claimed cash tokens will be atomically verified a
 
 ### 7. Confirm tokens from cash devices
 
-After a token has been successfully claimed by a cash device, the cashout or cashin process is performed and the cash device notifies dncash-io about the result of the cash process. In the confirmation call, only the token state can be updated, and only from state LOCKED to one of COMPLETED (completed normally, amount to be settled/marked for clearing), FAILED (technical failure), CANCELED (operation canceled by the user), REJECTED (process rejected or aborted by the system), RETRACTED (dispensed money retracted). In addition, the amount can be updated to the actual deposit or dispense amount (optional)
+After a token has been successfully claimed by a cash device, the cashout or cashin process is performed and the cash device notifies dncash-io about the result of the cash process. In the confirmation call, the token state can be updated only from state LOCKED to one of COMPLETED (completed normally, amount to be settled/marked for clearing), FAILED (technical failure), CANCELED (operation canceled by the user), REJECTED (process rejected or aborted by the system), RETRACTED (dispensed money retracted). Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference (will be part of the clearing information later). In addition, the amount can be updated to the actual deposit or dispense amount (optional)
 
 ### 8. Live token update on Token API
 
@@ -235,9 +235,10 @@ In an intra-bank/single customer scenario, the processes in step 8 and 9 may be 
         "date": "2018-04-16T08:07:03.000Z",
         "uuid": "916eb12e-4e8a-4833-8e78-be40115829e7",
         "type": "CASHOUT",
-        "refname": "bookref_08154711",
         "tokendevice": "custommobile123",
-        "cashdevice": "ATM-0001",
+        "refname": "bookref_08154711",
+        "lockdevice": "ATM-0001",
+        "lockrefname": "cashtsa_000173",
         "amount": 10000,
         "symbol": "EUR",
         "debitor": {

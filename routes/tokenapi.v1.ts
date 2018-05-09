@@ -130,7 +130,7 @@ export const tokenApiV1: Router = Router();
  *          example: 1577829600000
  *        refname:
  *          type: string
- *          description: custom reference name or number
+ *          description: custom reference name or number, e.g. booking transaction reference
  *          example: bookref_08154711
  *        info:
  *          $ref: '#/definitions/token_info'
@@ -143,6 +143,10 @@ export const tokenApiV1: Router = Router();
  *          required: true
  *          enum: [COMPLETED,CANCELED,FAILED,REJECTED,RETRACTED]
  *          example: COMPLETED
+ *        lockrefname:
+ *          type: string
+ *          description: custom reference name or number of the locking device, e.g. cash transaction reference
+ *          example: cashtsa_000173
  *        amount:
  *          type: number
  *          description: actual amount dispensed or deposited in smallest symbol units (cents)
@@ -338,8 +342,9 @@ tokenApiV1.get("/devices/:uid", function (request: Request, response: Response, 
  *                  The token server does not store the original unencrypted secure code, so that even compromised
  *                  token data cannot be used by someone else without physical access to the target device.
  *                  The request body must at least contain the information about the amount, currency symbol,
- *                  type and the target device_uuid. Other fields are optional. The info field is an 
- *                  arbitrary JSON object that may contain the denomData array as shown (to specify a desired
+ *                  type and the target device_uuid. Other fields are optional. The field refname can be used
+ *                  to hold a custom transaction reference name (will be part of clearing information).
+ *                  The info field is an arbitrary JSON object that may contain the denomData array as shown (to specify a desired
  *                  note selection) and any number of additional custom data fields to be stored along with the token.
  *     tags:
  *       - Token API
