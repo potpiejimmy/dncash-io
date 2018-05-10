@@ -6,6 +6,7 @@ import * as chai from 'chai';
 import * as chaiHttp from 'chai-http';
 import * as crypto from 'crypto';
 import * as constants from 'constants';
+import * as jwt from 'jsonwebtoken';
 import * as db from '../util/db';
 import {testApp as app, appReady} from '../app';
 
@@ -94,7 +95,7 @@ describe("admin.v1.auth:", () => {
     });
 
     describe("Sign in (ok) | POST /auth with correct password", () => {
-        it("should return session token", done => {
+        it("should return session token with user.status=1", done => {
             chai.request(app)
             .post("/dnapi/admin/v1/auth")
             .send({user:'test@test.de',password:'12345678'})
@@ -103,6 +104,97 @@ describe("admin.v1.auth:", () => {
                 res.body.should.be.a('object');
                 res.body.should.have.property('token');
                 sessionToken = res.body.token;
+                let dectoken = jwt.decode(sessionToken);
+                dectoken.should.have.property('status');
+                dectoken.status.should.be.eql(1);
+                done();
+            });
+        });
+    });
+
+    describe("Create other user (fail) | POST /auth/create, non-admin role", () => {
+        it("should return HTTP 500 with message 'Illegal access'", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/auth/create")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({email:'test2@test.de'})
+            .end((err, res) => {
+                res.should.have.status(500);
+                res.body.should.be.a('object');
+                res.body.should.have.property('message');
+                res.body.message.should.contain('Illegal access');
+                done();
+            });
+        });
+    });
+
+    describe("Re-sign in with admin role (ok) | POST /auth", () => {
+        before(() => db.querySingle("update customer set roles='user,admin'"));
+        it("should return session token with user.status=1", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/auth")
+            .send({user:'test@test.de',password:'12345678'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('token');
+                sessionToken = res.body.token;
+                let dectoken = jwt.decode(sessionToken);
+                dectoken.roles.should.contain('admin');
+                done();
+            });
+        });
+    });
+
+    let initialpassword;
+    describe("Create other user (ok) | POST /auth/create, admin role", () => {
+        it("should return new initial password", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/auth/create")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({email:'test2@test.de'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('initialpassword');
+                initialpassword = res.body.initialpassword;
+                done();
+            });
+        });
+    });
+
+    let otherSessionToken;
+    describe("Sign in with other user (ok) | POST /auth with initial password", () => {
+        it("should return session token with user.status=0", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/auth")
+            .send({user:'test2@test.de',password:initialpassword})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('token');
+                otherSessionToken = res.body.token;
+                let dectoken = jwt.decode(otherSessionToken);
+                dectoken.should.have.property('status');
+                dectoken.status.should.be.eql(0);
+                done();
+            });
+        });
+    });
+
+    describe("Change password(ok) | PUT /auth/changepw", () => {
+        it("should return new session token with user.status=1", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/auth/changepw")
+            .set("authorization", "Bearer "+otherSessionToken)
+            .send({oldPassword:initialpassword,newPassword:"12345678"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('token');
+                let dectoken = jwt.decode(res.body.token);
+                dectoken.should.have.property('status');
+                dectoken.status.should.be.eql(1);
                 done();
             });
         });

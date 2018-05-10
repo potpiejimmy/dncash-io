@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `customer` (
   `display_name` VARCHAR(128) NULL COMMENT 'optional display name / full name',
   `roles` VARCHAR(255) NOT NULL DEFAULT 'user' COMMENT 'comma-separated list of role names',
   `twofasecret` VARCHAR(32) NULL COMMENT 'if this 2FA secret code is set, 2FA is enabled',
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT 'customer status, default 0, currently not used',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT 'customer status, 0 = password change required, 1 = ok',
   `info` VARCHAR(255) NULL COMMENT 'additional info data, JSON encoded',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC))

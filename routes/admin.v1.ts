@@ -37,6 +37,24 @@ routerAdminV1.delete("/auth/twofa", function (request: Request, response: Respon
     .catch(err => next(err));
 });
 
+/*
+ * Changes the password for the authenticated user
+ */
+routerAdminV1.put("/auth/changepw", function (request: Request, response: Response, next: NextFunction) {
+    Login.changePassword(request.user, request.body.oldPassword, request.body.newPassword)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Create a new customer (superuser only)
+ */
+routerAdminV1.post("/auth/create", function (request: Request, response: Response, next: NextFunction) {
+    Login.registerOther(request.user, request.body.email)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
 // ------ access ------------------------
 
 /*

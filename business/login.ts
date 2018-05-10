@@ -2,6 +2,7 @@ import * as fetch from "node-fetch";
 import * as crypto from "crypto";
 import * as FormData from 'form-data';
 import * as speakeasy from 'speakeasy';
+import * as pwgen from 'generate-password';
 import * as db from "../util/db";
 import * as Param from "./param";
 import * as jwtauth from "../util/jwtauth";
@@ -12,6 +13,10 @@ class BadLogin {
 }
 let badLogins = new Map<string,BadLogin>();
 
+/**
+ * Registers a new user from the registration form using the chosen password.
+ * @param user new user properties
+ */
 export function register(user: any): Promise<any> {
     return findUserByEmail(user.email).then(found => {
         if (found) return {"result": "Sorry, this email is already registered."};
@@ -23,12 +28,50 @@ export function register(user: any): Promise<any> {
                 user.password = crypto.createHash('sha256').update(user.password).digest("hex");
                 delete user.captcha;
                 delete user.roles;
+                user.status = 1; // 1 = OK
                 return insertUser(user).then(() => readAndAuthenticate(user.email));
             } else {
                 return {"result": "Sorry, I don`t think you are a real person! Please try again."}
             }
         })
     });
+}
+
+/**
+ * Creates a new customer account for another entity or person. This is only
+ * allowed for currently authenticated admin users. Returns a generated random password.
+ * The new user will have to change the password upon first sign-in.
+ * @param user currently authenticated admin user
+ * @param email new email to register
+ */
+export function registerOther(user: any, email: string): Promise<any> {
+    if (!user.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return findUserByEmail(email).then(found => {
+        if (found) throw "Sorry, this email is already in use.";
+        let pw = pwgen.generate({length: 16, numbers: true, symbols: true});
+        let newuser = {
+            email: email,
+            password: crypto.createHash('sha256').update(pw).digest("hex")
+            // status defaults to 0 = password change required
+        };
+        // return the initial random password
+        return insertUser(newuser).then(() => { return {email: email, initialpassword: pw} });
+    });
+}
+
+/**
+ * Changes the password for the currently authenticated user.
+ */
+export function changePassword(user: any, oldPassword: string, newPassword: string): Promise<any> {
+    return findUserByEmail(user.email).then(dbuser => {
+        if (dbuser && crypto.createHash('sha256').update(oldPassword || '').digest("hex") == dbuser.password) {
+            if (!newPassword || newPassword.length < 8) throw "Sorry, bad new password";
+            dbuser.password = crypto.createHash('sha256').update(newPassword).digest("hex");
+            return updatePassword(dbuser).then(() => readAndAuthenticate(dbuser.email));
+        } else {
+            throw "Sorry, the password is incorrect.";
+        }
+    });        
 }
 
 export function login(email: string, password: string, twofatoken: string, skip2fa: boolean = false): Promise<any> {
@@ -78,6 +121,10 @@ export function findUserById(id: number): Promise<any> {
 
 function insertUser(user: any): Promise<any> {
     return db.querySingle("insert into customer set ?", [user]);
+}
+
+function updatePassword(user: any): Promise<any> {
+    return db.querySingle("update customer set status=1, password=? where email=?", [user.password, user.email]);
 }
 
 function readAndAuthenticate(email: string): Promise<any> {
