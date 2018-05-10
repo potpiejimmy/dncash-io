@@ -106,6 +106,11 @@ export function getAllUsers(user: any): Promise<any> {
     });
 }
 
+export function deleteUser(user: any, email: string): Promise<any> {
+    if (!user.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return db.querySingle("delete from customer where email=?",[email]);
+}
+
 function handleBadLogins(email: string): Promise<any> {
     Object.keys(badLogins).forEach(k => {
         if (Date.now() - badLogins[k].lastUsed > 24*60*60*1000) delete badLogins[k];

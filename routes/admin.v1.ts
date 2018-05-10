@@ -66,6 +66,15 @@ routerAdminV1.get("/customers",  function (request: Request, response: Response,
     .catch(err => next(err));
 });
 
+/*
+ * Deletes a customer (admin only)
+ */
+routerAdminV1.delete("/customers/:email",  function (request: Request, response: Response, next: NextFunction) {
+    Login.deleteUser(request.user, request.params.email)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
 // ------ access ------------------------
 
 /*
