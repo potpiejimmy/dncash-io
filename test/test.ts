@@ -111,6 +111,13 @@ describe("admin.v1.auth:", () => {
             });
         });
     });
+});
+
+/** Testing /routes/admin.v1.ts **/
+
+describe("admin.v1:", () => {
+
+    // customer
 
     describe("Create other user (fail) | POST /auth/create, non-admin role", () => {
         it("should return HTTP 500 with message 'Illegal access'", done => {
@@ -199,11 +206,24 @@ describe("admin.v1.auth:", () => {
             });
         });
     });
-});
 
-/** Testing /routes/admin.v1.ts **/
+    describe("Read all users (ok) | GET /customers", () => {
+        it("should return array of customers, length 2", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/customers")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(2);
+                res.body[0].should.have.property('email');
+                res.body[0].should.not.have.property('password');
+                done();
+            });
+        });
+    });
 
-describe("admin.v1:", () => {
+    // access
 
     describe("Read access (unauthorized) | GET /access without session token", () => {
         it("should return HTTP 401", done => {
@@ -399,6 +419,8 @@ describe("admin.v1:", () => {
             });
         });
     });
+
+    // parameter
 
     describe("Set a parameter (ok) | PUT /params/:pkey", () => {
         it("should return HTTP 200 ok", done => {

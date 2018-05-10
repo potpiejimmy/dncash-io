@@ -66,6 +66,7 @@ export function changePassword(user: any, oldPassword: string, newPassword: stri
     return findUserByEmail(user.email).then(dbuser => {
         if (dbuser && crypto.createHash('sha256').update(oldPassword || '').digest("hex") == dbuser.password) {
             if (!newPassword || newPassword.length < 8) throw "Sorry, bad new password";
+            if (oldPassword == newPassword) throw "Sorry, the new password cannot be the same as the old password.";
             dbuser.password = crypto.createHash('sha256').update(newPassword).digest("hex");
             return updatePassword(dbuser).then(() => readAndAuthenticate(dbuser.email));
         } else {
@@ -92,6 +93,17 @@ export function login(email: string, password: string, twofatoken: string, skip2
             return handleBadLogins(email);
         }
     });        
+}
+
+export function getAllUsers(user: any): Promise<any> {
+    if (!user.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return db.querySingle("select * from customer").then(res => {
+        res.forEach(c => {
+            delete c.password;
+            delete c.twofasecret;
+        });
+        return res;
+    });
 }
 
 function handleBadLogins(email: string): Promise<any> {

@@ -37,6 +37,8 @@ routerAdminV1.delete("/auth/twofa", function (request: Request, response: Respon
     .catch(err => next(err));
 });
 
+// ------ customer ------------------------
+
 /*
  * Changes the password for the authenticated user
  */
@@ -51,6 +53,15 @@ routerAdminV1.put("/auth/changepw", function (request: Request, response: Respon
  */
 routerAdminV1.post("/auth/create", function (request: Request, response: Response, next: NextFunction) {
     Login.registerOther(request.user, request.body.email)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Get all customers (admin only)
+ */
+routerAdminV1.get("/customers",  function (request: Request, response: Response, next: NextFunction) {
+    Login.getAllUsers(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
