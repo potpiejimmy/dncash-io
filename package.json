@@ -9,7 +9,8 @@
     "build": "tsc",
     "postinstall": "tsc",
     "test": "tsc && mocha --exit dist/test",
-    "deploy": "tsc && node dist/awsdeploy.js"
+    "deploy": "tsc && node dist/awsdeploy.js",
+    "createDB": "mysql -udncashio -pdncashio dncashio < db/scripts/drop.sql && mysql -udncashio -pdncashio dncashio < db/scripts/create.sql && mysql -udncashio -pdncashio dncashio < db/scripts/populate.sql"
   },
   "repository": {
     "type": "git",

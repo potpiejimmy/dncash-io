@@ -23,9 +23,15 @@ Create a UTF8 database named 'dncashio' with credentials 'dncashio'/'dncashio':
     mysql> grant all on dncashio.* to 'dncashio'@'localhost' identified by 'dncashio';
     mysql> exit
     
-Initial setup (DDL):
+Initial DB setup (DDL):
     
     mysql -udncashio -p dncashio < db/scripts/create.sql
+
+Alternatively, execute
+
+    npm run createDB
+
+to drop and recreate all database tables (make sure the mysql executable is in your PATH). This will also execute populate.sql which creates an admin user admin@dncash.io with the initial password admin123.
 
 ### Redis
 
@@ -46,6 +52,8 @@ to install all dependencies and to compile the Typescript code. To manually buil
 dncash-io uses Mocha and Chai as testing frameworks. Run a complete set of test cases by calling
 
     npm test
+
+Note that running the tests will erase all data in the database before the tests are executed.
 
 ### Start
 
