@@ -62,5 +62,8 @@ export function querySingle(stmt: string, params: any[] = []) : Promise<any> {
     return connection().then(connection => query(connection, stmt, params).then(res => {
         connection.release();
         return res;
+    }).catch(err => {
+        connection.release();
+        throw err;
     }));
 }
