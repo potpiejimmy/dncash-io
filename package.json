@@ -20,19 +20,19 @@
   "license": "ISC",
   "devDependencies": {
     "@types/mocha": "^5.2.0",
-    "@types/node": "^9.6.8",
+    "@types/node": "^9.6.15",
     "chai": "^4.1.2",
     "chai-http": "^4.0.0",
     "concurrently": "^3.5.1",
     "mocha": "^5.1.1",
-    "nodemon": "^1.17.3",
+    "nodemon": "^1.17.4",
     "typescript": "^2.8.3"
   },
   "dependencies": {
     "base32": "0.0.6",
     "express": "^4.16.3",
     "express-jwt": "^5.3.1",
-    "express-ws": "^3.0.0",
+    "express-ws": "github:potpiejimmy/express-ws#v3.0.1",
     "form-data": "^2.3.2",
     "generate-password": "^1.4.0",
     "jsonwebtoken": "^8.2.1",
@@ -44,7 +44,7 @@
     "redis": "^2.8.0",
     "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^1.9.7",
-    "swagger-ui-express": "^2.0.15",
+    "swagger-ui-express": "^3.0.9",
     "uuid": "^3.2.1",
     "winston": "^2.4.2"
   }
