@@ -32,7 +32,7 @@
     "base32": "0.0.6",
     "express": "^4.16.3",
     "express-jwt": "^5.3.1",
-    "express-ws": "github:potpiejimmy/express-ws#v3.0.1",
+    "express-ws": "^3.0.0",
     "form-data": "^2.3.2",
     "generate-password": "^1.4.0",
     "jsonwebtoken": "^8.2.1",
