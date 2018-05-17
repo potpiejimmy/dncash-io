@@ -67,6 +67,29 @@ export const clearingApiV1: Router = Router();
  *         type: string
  *         description: Account IBAN
  *         example: DE1001100152389572932
+ *   clearing_customer_response:
+ *     type: object
+ *     properties:
+ *       id:
+ *         type: number
+ *         description: customer ID (admin only)
+ *         example: 12345
+ *       email:
+ *         type: string
+ *         description: customer email address
+ *         example: test@dncash.io
+ *       display_name:
+ *         type: string
+ *         description: customer display name
+ *         example: John Doe
+ *       roles:
+ *         type: string
+ *         description: comma-separated list of user roles
+ *         example: user,bank
+ *       info:
+ *         type: string
+ *         description: generic customer info string data
+ *         example: {"customField":"customValue"}
  */
 
 // ------- clearing data ---------------------
@@ -76,7 +99,7 @@ export const clearingApiV1: Router = Router();
  * /dnapi/clearing/v1/:
  *   get:
  *     summary: Retrieves clearing data
- *     description: Reads and returns clearing data for the authenticated customer.
+ *     description: Reads and returns clearing data for the authenticated customer (or all for administrators).
  *     tags:
  *       - Clearing API
  *     produces:
@@ -108,6 +131,11 @@ export const clearingApiV1: Router = Router();
  *         enum: [CASHOUT,CASHIN]
  *         in: query
  *         example: CASHOUT
+ *       - name: customer_id
+ *         type: number
+ *         description: filter given customer ID (admin only, required for admin)
+ *         in: query
+ *         example: 12345
  * 
  *     responses:
  *       200:
@@ -122,7 +150,47 @@ export const clearingApiV1: Router = Router();
  *           $ref: '#/definitions/unauthorized'
  */
 clearingApiV1.get("/", function (request: Request, response: Response, next: NextFunction) {
-    Clearing.getClearingData(request.user.id, request.query)
+    Clearing.getClearingData(request.user, request.query)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/clearing/v1/customers:
+ *   get:
+ *     summary: Retrieves customer data
+ *     description: Reads and returns the customer data for the authenticated customer (or all for administrators).
+ *     tags:
+ *       - Clearing API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Clearing API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Clearing API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ * 
+ *     responses:
+ *       200:
+ *         description: Returns customer data
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/clearing_customer_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+clearingApiV1.get("/customers", function (request: Request, response: Response, next: NextFunction) {
+    Clearing.getCustomerData(request.user)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

@@ -1145,6 +1145,7 @@ describe("clearingapi.v1:", () => {
     });
 
     describe("Read clearing data (ok) | GET /", () => {
+        before(() => db.querySingle("update customer set roles='user'"));
         it("should return one clearing with refnames 'custref1234' and 'cashref1234'", done => {
             chai.request(app)
             .get("/dnapi/clearing/v1")
@@ -1165,4 +1166,38 @@ describe("clearingapi.v1:", () => {
             });
         });
     });
+
+    describe("Read customer data, non-admin (ok) | GET /customers", () => {
+        it("should return one customer", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1/customers")
+            .set("DN-API-KEY", clearingApiKey)
+            .set("DN-API-SECRET", clearingApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(1);
+                res.body[0].should.have.property('email');
+                done();
+            });
+        });
+    });
+
+    describe("Read customer data, admin (ok) | GET /customers", () => {
+        before(() => db.querySingle("update customer set roles='user,admin'"));
+        it("should return multiple customers", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1/customers")
+            .set("DN-API-KEY", clearingApiKey)
+            .set("DN-API-SECRET", clearingApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.gt(1);
+                res.body[0].should.have.property('email');
+                done();
+            });
+        });
+    });
+
 });
