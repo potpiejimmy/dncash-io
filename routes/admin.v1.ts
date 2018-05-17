@@ -75,6 +75,24 @@ routerAdminV1.delete("/customers/:email",  function (request: Request, response:
     .catch(err => next(err));
 });
 
+/*
+ * Deletes a customer's 2FA token / reset 2 FA (admin only)
+ */
+routerAdminV1.delete("/customers/:email/twofa",  function (request: Request, response: Response, next: NextFunction) {
+    Login.reset2FAForUser(request.user, request.params.email)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Updates/saves a customer (admin only)
+ */
+routerAdminV1.put("/customers/:email",  function (request: Request, response: Response, next: NextFunction) {
+    Login.updateUser(request.user, request.params.email, request.body)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
 // ------ access ------------------------
 
 /*

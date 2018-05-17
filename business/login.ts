@@ -95,8 +95,8 @@ export function login(email: string, password: string, twofatoken: string, skip2
     });        
 }
 
-export function getAllUsers(user: any): Promise<any> {
-    if (!user.roles.includes('admin')) throw "Illegal access: Not allowed.";
+export function getAllUsers(admin: any): Promise<any> {
+    if (!admin.roles.includes('admin')) throw "Illegal access: Not allowed.";
     return db.querySingle("select * from customer").then(res => {
         res.forEach(c => {
             delete c.password;
@@ -106,9 +106,14 @@ export function getAllUsers(user: any): Promise<any> {
     });
 }
 
-export function deleteUser(user: any, email: string): Promise<any> {
-    if (!user.roles.includes('admin')) throw "Illegal access: Not allowed.";
+export function deleteUser(admin: any, email: string): Promise<any> {
+    if (!admin.roles.includes('admin')) throw "Illegal access: Not allowed.";
     return db.querySingle("delete from customer where email=?",[email]);
+}
+
+export function updateUser(admin: any, email: string, updateData: any): Promise<any> {
+    if (!admin.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return db.querySingle("update customer set roles=?,info=? where email=?",[updateData.roles,updateData.info,email]);
 }
 
 function handleBadLogins(email: string): Promise<any> {
@@ -211,6 +216,18 @@ export function enable2FA(user: any, token: string): Promise<any> {
  * Disables 2FA for the given user
  */
 export function disable2FA(user: any): Promise<any> {
+    return disable2FAImpl(user);
+}
+
+/**
+ * Disables/Resets 2FA for a given user (admin only)
+ */
+export function reset2FAForUser(admin: any, email: string): Promise<any> {
+    if (!admin.roles.includes('admin')) throw "Illegal access: Not allowed.";
+    return findUserByEmail(email).then(u => disable2FAImpl(u));
+}
+
+function disable2FAImpl(user: any): Promise<any> {
     return db.querySingle("update customer set twofasecret=null where id=?", [user.id])
     .then(()=>findUserById(user.id))
     .then(u=>authenticate(u));
