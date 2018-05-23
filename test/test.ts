@@ -223,6 +223,20 @@ describe("admin.v1:", () => {
         });
     });
 
+    describe("Update user (ok) | PUT /customers/:email", () => {
+        it("should return HTTP 200", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/customers/" + encodeURIComponent("test2@test.de"))
+            .set("authorization", "Bearer "+sessionToken)
+            .send({display_name:"Second Test User",roles:"user,bank",info:"{\"customerNo\":\"12345678\"}"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                done();
+            });
+        });
+    });
+
     // access
 
     describe("Read access (unauthorized) | GET /access without session token", () => {

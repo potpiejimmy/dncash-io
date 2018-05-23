@@ -113,7 +113,9 @@ export function deleteUser(admin: any, email: string): Promise<any> {
 
 export function updateUser(admin: any, email: string, updateData: any): Promise<any> {
     if (!admin.roles.includes('admin')) throw "Illegal access: Not allowed.";
-    return db.querySingle("update customer set roles=?,info=? where email=?",[updateData.roles,updateData.info,email]);
+    let dbstmt = "update customer set display_name=?,roles=?,info=? where email=?";
+    let dbparams = [updateData.display_name,updateData.roles,updateData.info,email];
+    return db.querySingle(dbstmt, dbparams);
 }
 
 function handleBadLogins(email: string): Promise<any> {
