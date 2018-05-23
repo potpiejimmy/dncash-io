@@ -18,9 +18,12 @@ export function getClearingData(user: any, filters: any): Promise<any> {
     let customer_id = user.roles.includes('admin') ? filters.customer_id : user.id;
 
     let stmt: string =
-        "select c.created as date,t.uuid,t.type,td.refname as tokendevice,t.refname,cd.refname as lockdevice,t.lockrefname,amount,symbol,debitor_account as debitor, creditor_account as creditor "+
-        "from clearing c join token t on c.token_id=t.id join customer_device td on t.owner_device_id=td.id join customer_device cd on t.lock_device_id=cd.id "+
-        "where (debitor_id=? or creditor_id=?)";
+        "select c.created as date,t.uuid,t.type,td.refname as tokendevice,t.refname,cd.refname as lockdevice,t.lockrefname,amount,symbol,debitor_account as debitor, creditor_account as creditor";
+    if (user.roles.includes('admin')) stmt +=
+        ", debitor_id, creditor_id";
+    stmt += 
+        " from clearing c join token t on c.token_id=t.id join customer_device td on t.owner_device_id=td.id join customer_device cd on t.lock_device_id=cd.id"+
+        " where (debitor_id=? or creditor_id=?)";
 
     let params: any = [customer_id, customer_id];
 
