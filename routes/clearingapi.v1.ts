@@ -55,6 +55,34 @@ export const clearingApiV1: Router = Router();
  *         $ref: '#/definitions/clearing_account_info'
  *       creditor:
  *         $ref: '#/definitions/clearing_account_info'
+ *   clearing_data_sums_response:
+ *     type: object
+ *     properties:
+ *       type:
+ *         type: string
+ *         enum: [CASHOUT,CASHIN]
+ *         required: true
+ *         example: CASHOUT
+ *       amount:
+ *         type: number
+ *         description: sum amount in smallest symbol units (e.g. cents)
+ *         required: true
+ *         example: 1346000
+ *       symbol:
+ *         type: string
+ *         description: the currency symbol
+ *         required: true
+ *         example: EUR
+ *       debitor_id:
+ *         type: number
+ *         description: debitor customer id
+ *         required: true
+ *         example: 119
+ *       creditor_id:
+ *         type: number
+ *         description: creditor customer id
+ *         required: true
+ *         example: 120
  *   clearing_account_info:
  *     type: object
  *     description: clearing account information
@@ -99,7 +127,7 @@ export const clearingApiV1: Router = Router();
  * /dnapi/clearing/v1/:
  *   get:
  *     summary: Retrieves clearing data
- *     description: Reads and returns clearing data for the authenticated customer (or all for administrators).
+ *     description: Reads and returns clearing data for the authenticated customer (or for given customer_id for administrators).
  *     tags:
  *       - Clearing API
  *     produces:
@@ -151,6 +179,61 @@ export const clearingApiV1: Router = Router();
  */
 clearingApiV1.get("/", function (request: Request, response: Response, next: NextFunction) {
     Clearing.getClearingData(request.user, request.query)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/clearing/v1/sums:
+ *   get:
+ *     summary: Retrieves clearing data aggregated sums
+ *     description: Reads and returns clearing data aggregated sums for the authenticated customer (or for given customer_id for administrators).
+ *     tags:
+ *       - Clearing API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Clearing API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Clearing API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: from
+ *         type: string
+ *         description: Return clearing data with a date greater than or equal to the given date
+ *         in: query
+ *         example: '2018-01-01T00:00:00Z'
+ *       - name: to
+ *         type: string
+ *         description: Return clearing data with a date less than the given date
+ *         in: query
+ *         example: '2018-02-01T00:00:00Z'
+ *       - name: customer_id
+ *         type: number
+ *         description: filter given customer ID (admin only, required for admin)
+ *         in: query
+ *         example: 12345
+ * 
+ *     responses:
+ *       200:
+ *         description: Returns clearing data sums
+ *         schema:
+ *           type: array
+ *           items:
+ *             $ref: '#/definitions/clearing_data_sums_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+clearingApiV1.get("/sums", function (request: Request, response: Response, next: NextFunction) {
+    Clearing.getClearingDataSums(request.user, request.query)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

@@ -1181,6 +1181,24 @@ describe("clearingapi.v1:", () => {
         });
     });
 
+    describe("Read clearing data aggregated sums (ok) | GET /sums", () => {
+        it("should return one row with type 'CASHOUT' and amount", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1/sums")
+            .set("DN-API-KEY", clearingApiKey)
+            .set("DN-API-SECRET", clearingApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.length.should.be.eql(1);
+                res.body[0].should.have.property('type');
+                res.body[0].type.should.be.eql('CASHOUT');
+                res.body[0].should.have.property('amount');
+                done();
+            });
+        });
+    });
+
     describe("Read customer data, non-admin (ok) | GET /customers", () => {
         it("should return one customer", done => {
             chai.request(app)
