@@ -38,7 +38,7 @@ function cleanUp() {
     })
 }
 
-export function createTrigger(customer: any, device_uuid: string): Promise<any> {
+export function createTrigger(customer: any, device_uuid: string, expiresIn: number = config.TRIGGER_CODE_VALIDITY_SECONDS): Promise<any> {
     cleanUp();
 
     return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
@@ -47,7 +47,7 @@ export function createTrigger(customer: any, device_uuid: string): Promise<any> 
         // create a new unique id
         let triggercode = uuid();
         let trigger = {
-            expires: Date.now() + config.TRIGGER_CODE_VALIDITY_SECONDS * 1000,
+            expires: Date.now() + expiresIn * 1000,
             cashDeviceId: cashDevice.id
         };
 
@@ -59,7 +59,7 @@ export function createTrigger(customer: any, device_uuid: string): Promise<any> 
 
         let response = Promise.resolve();
         if (redis.isEnabled())
-            response = response.then(() => redis.setValue(redisTriggerMap, triggercode, trigger, config.TRIGGER_CODE_VALIDITY_SECONDS));
+            response = response.then(() => redis.setValue(redisTriggerMap, triggercode, trigger, expiresIn));
 
         // return the new trigger code
         return response.then(() => result);

@@ -182,11 +182,14 @@ cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, ne
  * @swagger
  * /dnapi/cash/v1/trigger:
  *   post:
- *     summary: Creates and returns a new trigger code for cash devices without radio or scanning capabilities
- *     description: Cash devices without radio or scanning capabilities may use a secure API trigger
- *                  to fetch token information pushed onto the ATM by the token server.
- *                  This method returns a random, globally unique trigger code that is only valid for a short
- *                  period of time (a couple of seconds) before it expires.
+ *     summary: Creates and returns a new trigger code for cash devices
+ *     description: Cash devices may use a secure API trigger
+ *                  to receive token information pushed onto the ATM by the token server.
+ *                  This can be used by cash devices without radio or scanning capabilities - or to support
+ *                  scenarios where it is desired that no information is transferred from the mobile device
+ *                  to the cash device, but vice-versa only.
+ *                  This method returns a random, globally unique trigger code that is only valid for the given
+ *                  period of time (for instance, 60 seconds) before it expires.
  *                  After receiving the trigger code, the ATM opens a GET request on the /triggers/{triggercode}
  *                  endpoint to receive an instant and locked token as soon as it is triggered by the
  *                  mobile device. After opening the endpoint, the ATM should display the unique
@@ -213,6 +216,10 @@ cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, ne
  *         in: query
  *         required: true
  *         type: string
+ *       - name: expiresIn
+ *         description: In seconds, sets the trigger expiration time, default is 60 seconds
+ *         in: query
+ *         type: number
  *     responses:
  *       200:
  *         description: Returns a new trigger code
@@ -229,7 +236,7 @@ cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, ne
  *           $ref: '#/definitions/unauthorized'
  */
 cashApiV1.post("/trigger", function (request: Request, response: Response, next: NextFunction) {
-    Trigger.createTrigger(request.user, request.query.device_uuid)
+    Trigger.createTrigger(request.user, request.query.device_uuid, request.query.expiresIn)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
