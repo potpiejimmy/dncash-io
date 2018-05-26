@@ -2,6 +2,7 @@ import * as uuid from "uuid/v4"; // Random-based UUID
 import * as Device from "./device";
 import * as Token from "./token";
 import * as redis from '../util/redis';
+import * as mqtt from '../util/mqtt';
 import * as config from "../config";
 import { SignedStringData } from "../util/utils";
 
@@ -16,6 +17,7 @@ let triggerMap: Map<string, TriggerEntry> = new Map();
 let redisSubscriber;
 let redisPublisher;
 let redisTriggerMap;
+let mqttPublisher;
 
 if (redis.isEnabled()) {
     redisSubscriber = redis.createClient();
@@ -26,6 +28,10 @@ if (redis.isEnabled()) {
         localSendToken(data.triggercode, data.token);
     });
     redisSubscriber.subscribe('trigger');
+}
+
+if (mqtt.isEnabled()) {
+    mqttPublisher = mqtt.createClient();
 }
 
 function cleanUp() {
@@ -80,7 +86,7 @@ export function registerTrigger(customer: any, triggercode: string, tokenReceive
 export function notifyTrigger(triggercode: string, radiocode: string, signature: string): Promise<any> {
     return getTrigger(triggercode).then(trigger => {
         if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
-
+        if (redis.isEnabled()) redis.deleteValue(redisTriggerMap, triggercode);
         return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radiocode, new SignedStringData(triggercode + radiocode, signature)).then(t => {
             // send the token out
             sendToken(triggercode, t);
@@ -103,11 +109,15 @@ function getTrigger(triggercode: string): Promise<TriggerEntry> {
 }
 
 function sendToken(triggercode: string, token: any) {
+    let tokenPublishData = JSON.stringify({
+        triggercode: triggercode,
+        token: token
+    });
+    if (mqtt.isEnabled()) {
+        mqttPublisher.publish('dncash-io', tokenPublishData);
+    }
     if (redis.isEnabled()) {
-        redisPublisher.publish('trigger', JSON.stringify({
-            triggercode: triggercode,
-            token: token
-        }));
+        redisPublisher.publish('trigger', tokenPublishData);
     } else {
         localSendToken(triggercode, token);
     }
@@ -116,7 +126,9 @@ function sendToken(triggercode: string, token: any) {
 function localSendToken(triggercode: string, token: any) {
     let trigger = triggerMap[triggercode];
     // do nothing if not known locally
-    if (!trigger || !trigger.response) return;
+    if (!trigger) return;
+    delete triggerMap[triggercode];
+    if (!trigger.response) return; // not connected/registered locally
     // send the token to the trigger registrar
     trigger.response.json(token);
 }

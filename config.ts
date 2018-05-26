@@ -7,3 +7,5 @@ export const TRIGGER_CODE_VALIDITY_SECONDS = 60; // default validity of trigger 
 export const ALLOW_INTER_CUSTOMER_CLEARING = true; // allow foreign tokens
 export const USE_REDIS = process.env.USE_REDIS; // allows clustering of dncash-io by sending all token change and trigger notifications through redis
 export const REDIS_URL = process.env.REDIS_URL; // note: uses standard redis port on localhost if not specified
+export const USE_MQTT = process.env.USE_MQTT; // if set, triggered tokens will be sent to MQTT
+export const MQTT_URL = process.env.MQTT_URL || 'mqtt://localhost:1883'; // MQTT URL

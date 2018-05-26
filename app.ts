@@ -13,6 +13,7 @@ import * as nocache from 'nocache';
 import * as morgan from 'morgan';
 
 import * as redis from './util/redis';
+import * as mqtt from './util/mqtt';
 import * as swagger from './util/swagger';
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
@@ -107,7 +108,8 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
     });
 });
 
-export let appReady = redis.waitForRedisReady().then(() => {
+export let appReady = redis.waitForRedisReady().then(() => 
+                      mqtt.waitForMQTTReady().then(() => {
 
     logging.logger.info("Server initialized successfully");
 
@@ -119,7 +121,7 @@ export let appReady = redis.waitForRedisReady().then(() => {
             resolve();
         });
     });
-});
+}));
 
 // export app for test code in test/test.ts
 export let testApp = app;

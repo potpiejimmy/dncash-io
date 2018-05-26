@@ -45,8 +45,12 @@ export function getValue(client: any, key: string): Promise<any> {
 
 export function setValue(client: any, key: string, value: any, expiresInSec: number): Promise<void> {
     return new Promise(resolve => {
-        client.set(key, JSON.stringify(value), 'EX', expiresInSec, (err, res) => {
-            resolve();
-        });
+        client.set(key, JSON.stringify(value), 'EX', expiresInSec, (err, res) => resolve());
+    });
+}
+
+export function deleteValue(client: any, key: string): Promise<void> {
+    return new Promise(resolve => {
+        client.del(key, (err, res) => resolve());
     });
 }
