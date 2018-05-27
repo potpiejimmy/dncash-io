@@ -6,6 +6,7 @@ import * as pwgen from 'generate-password';
 import * as db from "../util/db";
 import * as Param from "./param";
 import * as jwtauth from "../util/jwtauth";
+import * as logging from "../util/logging";
 
 class BadLogin {
     count: number;
@@ -168,7 +169,7 @@ function authenticate(user): any {
 }
 
 function verifyCaptcha(captcha : string) : Promise<any> {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' || process.env.CAPTCHA_OFF) {
         return Promise.resolve({success:true});
     }
     let form = new FormData();
@@ -179,6 +180,7 @@ function verifyCaptcha(captcha : string) : Promise<any> {
             return res.json();
         }).catch(function(err) {
             console.log(err);
+            logging.logger.warn("Could not verify captcha. Disable captcha verification with environment variable CAPTCHA_OFF=1.");
         });
 };
 
