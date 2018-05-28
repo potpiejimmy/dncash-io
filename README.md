@@ -33,9 +33,13 @@ Alternatively, execute
 
 to drop and recreate all database tables (make sure the mysql executable is in your PATH). This will also execute populate.sql which creates an admin user admin@dncash.io with the initial password admin123.
 
-### Redis
+### Redis (optional)
 
 Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS_URL=redis://host:port if Redis is not running locally.
+
+### MQTT (optional)
+
+In scenarios where the cash device is triggered by the token device (scanning / receiving of trigger codes), dncash.io can optionally publish a message to a given MQTT queue endpoint (instead of only responding to a waiting API request on the trigger endpoint). Set the environment variable USE_MQTT=true if you want to enable MQTT. Also set MQTT_URL to a valid broker endpoint address (defaults to mqtt://localhost:1883, the endpoint is checked on startup).
 
 ### Install / Build
 
