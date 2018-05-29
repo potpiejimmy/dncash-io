@@ -114,7 +114,7 @@ function sendToken(triggercode: string, token: any) {
         token: token
     });
     if (mqtt.isEnabled()) {
-        mqttPublisher.publish('dncash-io', tokenPublishData);
+        mqttPublisher.publish('dncash-io/trigger/'+triggercode, tokenPublishData);
     }
     if (redis.isEnabled()) {
         redisPublisher.publish('trigger', tokenPublishData);
