@@ -131,7 +131,7 @@ export function updateByUUID(customer: any, uid: string, body: any): Promise<any
 }
 
 export function getStatistics(customer: any): Promise<any> {
-    return db.querySingle("select state, type, sum(amount) as amount, count(*) as count from token where owner_id=? group by state, type", [customer.id]);
+    return db.querySingle("select t.state, t.type, sum(amount) as amount, count(*) as count from token t left outer join customer_device d on t.lock_device_id=d.id where t.owner_id=? or d.customer_id=? group by t.state, t.type", [customer.id,customer.id]);
 }
 
 export function verifyAndLock(customer: any, device_uuid: string, radio_code: string): Promise<any> {
@@ -164,9 +164,11 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
                 tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: uid});
+                if (token.owner_id != customer.id) tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
                 // re-read and export:
                 return findById(token.id).then(t => {
-                    Journal.journalize(customer.id, "token", "confirm", t);
+                    Journal.journalize(token.owner_id, "token", "confirm", t);
+                    if (token.owner_id != customer.id) Journal.journalize(customer.id, "token", "confirm", t);
                     // add to clearing and export
                     return clearToken(t, customer.id).then(() => exportToken(t));
                 });
@@ -259,9 +261,11 @@ function atomicLockAndReturn(cashDevice: any, token: any, action: string, state:
     return atomicLockTokenDB(token.id, cashDevice.id, state).then(success => {
         if (!success) throw "Token not in OPEN state.";
         tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token.uuid});
+        if (token.owner_id != cashDevice.customer_id) tokenChangeNotifier.notifyObservers(cashDevice.customer_id, {uuid: token.uuid});
         // re-read and export:
         return findById(token.id).then(t => {
-            Journal.journalize(cashDevice.customer_id, "token", action, t);
+            Journal.journalize(token.owner_id, "token", action, t);
+            if (token.owner_id != cashDevice.customer_id) Journal.journalize(cashDevice.customer_id, "token", action, t);
             return exportToken(t)
         });
     });
