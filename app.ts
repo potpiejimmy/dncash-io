@@ -14,6 +14,7 @@ import * as morgan from 'morgan';
 
 import * as redis from './util/redis';
 import * as mqtt from './util/mqtt';
+import * as jobs from './util/jobs';
 import * as swagger from './util/swagger';
 import * as jwtauth from "./util/jwtauth";
 import * as apiauth from "./util/apiauth";
@@ -110,6 +111,9 @@ app.use(function(err: any, req: express.Request, res: express.Response, next: ex
 
 export let appReady = redis.waitForRedisReady().then(() => 
                       mqtt.waitForMQTTReady().then(() => {
+
+    // schedule jobs:
+    jobs.scheduleJobs();
 
     logging.logger.info("Server initialized successfully");
 

@@ -1,4 +1,5 @@
 import * as redis from './redis';
+import * as logging from './logging';
 
 class RedisNotifier {
 
@@ -13,6 +14,9 @@ class RedisNotifier {
 
             this.redisSubscriber.on('message', (channel,message) => {
                 this.localNotifyObservers(channel, JSON.parse(message));
+            });
+            this.redisSubscriber.on('error', err => {
+                logging.logger.error("Notifier: Redis not ready: " + err);
             });
         }
     }
