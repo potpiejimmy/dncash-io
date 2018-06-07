@@ -63,6 +63,11 @@ export const clearingApiV1: Router = Router();
  *         enum: [CASHOUT,CASHIN]
  *         required: true
  *         example: CASHOUT
+ *       count:
+ *         type: number
+ *         description: number of clearing entries
+ *         required: true
+ *         example: 112
  *       amount:
  *         type: number
  *         description: sum amount in smallest symbol units (e.g. cents)

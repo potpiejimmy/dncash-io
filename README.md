@@ -35,7 +35,7 @@ to drop and recreate all database tables (make sure the mysql executable is in y
 
 ### Redis (optional)
 
-Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS_URL=redis://host:port if Redis is not running locally.
+Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. It is also used to support atomic single executions of scheduled jobs in the cluster. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS_URL=redis://host:port if Redis is not running locally.
 
 ### MQTT (optional)
 

@@ -1182,7 +1182,7 @@ describe("clearingapi.v1:", () => {
     });
 
     describe("Read clearing data aggregated sums (ok) | GET /sums", () => {
-        it("should return one row with type 'CASHOUT' and amount", done => {
+        it("should return one row with type 'CASHOUT' and fields count, amount", done => {
             chai.request(app)
             .get("/dnapi/clearing/v1/sums")
             .set("DN-API-KEY", clearingApiKey)
@@ -1193,6 +1193,7 @@ describe("clearingapi.v1:", () => {
                 res.body.length.should.be.eql(1);
                 res.body[0].should.have.property('type');
                 res.body[0].type.should.be.eql('CASHOUT');
+                res.body[0].should.have.property('count');
                 res.body[0].should.have.property('amount');
                 done();
             });

@@ -52,7 +52,7 @@ export function getClearingDataSums(user: any, filters: any): Promise<any> {
     let customer_id = user.roles.includes('admin') ? filters.customer_id : user.id;
 
     let stmt: string =
-        "select t.type,symbol,debitor_id,creditor_id,sum(amount) as amount"+
+        "select t.type,symbol,debitor_id,creditor_id,count(amount) as count,sum(amount) as amount"+
         " from clearing c join token t on c.token_id=t.id"+
         " where (debitor_id=? or creditor_id=?)";
 
