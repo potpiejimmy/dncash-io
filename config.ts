@@ -9,3 +9,4 @@ export const USE_REDIS = process.env.USE_REDIS; // allows clustering of dncash-i
 export const REDIS_URL = process.env.REDIS_URL; // note: uses standard redis port on localhost if not specified
 export const USE_MQTT = process.env.USE_MQTT; // if set, triggered tokens will be sent to MQTT
 export const MQTT_URL = process.env.MQTT_URL || 'mqtt://localhost:1883'; // MQTT URL
+export const MAX_HISTORY_DAYS = parseInt(process.env.MAX_HISTORY_DAYS) || 90; // maximum history to be kept in database tables
