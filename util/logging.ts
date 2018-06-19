@@ -16,7 +16,7 @@ export let logger = new winston.Logger({
             colorize: false
         }),
         new winston.transports.Console({
-            level: 'debug',
+            level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
             handleExceptions: true,
             json: false,
             colorize: true,
