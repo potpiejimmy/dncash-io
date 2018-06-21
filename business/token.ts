@@ -49,7 +49,7 @@ export function createToken(customer: any, token: any): Promise<any> {
             if (token.expires) token.expires = new Date(token.expires);
             return insertNew(token).then(id => findById(id)).then(t => {
                 tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
-                Journal.journalize(customer.id, "token", "create", t);
+                journalizeToken(customer.id, "token", "create", t);
                 createdToken = exportToken(t);
                 retries = 0;
             }).catch(err => {
@@ -111,7 +111,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
             if (res.affectedRows) {
                 tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
                 return findByUUID(uid).then(t => {
-                    Journal.journalize(customer.id, "token", "delete", t);
+                    journalizeToken(customer.id, "token", "delete", t);
                     return exportToken(t);
                 });
             }
@@ -124,7 +124,7 @@ export function updateByUUID(customer: any, uid: string, body: any): Promise<any
     return updateToken(uid, body).then(updcount => {
         if (!updcount) return null;
         return findByUUID(uid).then(t => {
-            Journal.journalize(customer.id, "token", "update", t);
+            journalizeToken(customer.id, "token", "update", t);
             return exportToken(t);
         });
     });
@@ -167,8 +167,8 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
                 if (token.owner_id != customer.id) tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
                 // re-read and export:
                 return findById(token.id).then(t => {
-                    Journal.journalize(token.owner_id, "token", "confirm", t);
-                    if (token.owner_id != customer.id) Journal.journalize(customer.id, "token", "confirm", t);
+                    journalizeToken(token.owner_id, "token", "confirm", t);
+                    if (token.owner_id != customer.id) journalizeToken(customer.id, "token", "confirm", t);
                     // add to clearing and export
                     return clearToken(t, customer.id).then(() => exportToken(t));
                 });
@@ -264,8 +264,8 @@ function atomicLockAndReturn(cashDevice: any, token: any, action: string, state:
         if (token.owner_id != cashDevice.customer_id) tokenChangeNotifier.notifyObservers(cashDevice.customer_id, {uuid: token.uuid});
         // re-read and export:
         return findById(token.id).then(t => {
-            Journal.journalize(token.owner_id, "token", action, t);
-            if (token.owner_id != cashDevice.customer_id) Journal.journalize(cashDevice.customer_id, "token", action, t);
+            journalizeToken(token.owner_id, "token", action, t);
+            if (token.owner_id != cashDevice.customer_id) journalizeToken(cashDevice.customer_id, "token", action, t);
             return exportToken(t)
         });
     });
@@ -351,4 +351,11 @@ function updateToken(uid: string, newFields: any): Promise<boolean> {
     query += " where uuid=?";
     params.push(uid);
     return db.querySingle(query, params).then(res => res.affectedRows);
+}
+
+function journalizeToken(customer_id: number, entity: string, action: string, token: any) {
+    let jtoken = JSON.parse(JSON.stringify(token));
+    delete jtoken.plain_code;
+    delete jtoken.secure_code;
+    Journal.journalize(customer_id, entity, action, jtoken);
 }
