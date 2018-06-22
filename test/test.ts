@@ -622,7 +622,7 @@ describe("tokenapi.v1:", () => {
             .post("/dnapi/token/v1/tokens")
             .set("DN-API-KEY", tokenApiKey)
             .set("DN-API-SECRET", tokenApiSecret)
-            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234'})
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234', info: {denomData:[{denom:1000,count:5},{denom:5000,count:1}], customKey:"customValue"}})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');

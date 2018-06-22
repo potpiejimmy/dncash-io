@@ -357,5 +357,6 @@ function journalizeToken(customer_id: number, entity: string, action: string, to
     let jtoken = JSON.parse(JSON.stringify(token));
     delete jtoken.plain_code;
     delete jtoken.secure_code;
+    jtoken.info = JSON.parse(jtoken.info);
     Journal.journalize(customer_id, entity, action, jtoken);
 }
