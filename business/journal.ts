@@ -9,10 +9,18 @@ export function journalize(customer_id: number, entity: string, action: string, 
     }]);
 }
 
-export function getJournal(customer_id: number, limit: string, filter: string): Promise<any> {
+export function getJournal(customer_id: number, limit: string, from: string, to: string, filter: string): Promise<any> {
     let params: Array<any> = [];
     params.push(customer_id);
     let sql = "select * from journal where customer_id=?";
+    if (from) {
+        params.push(new Date(parseInt(from)));
+        sql += " and created>=?";
+    }
+    if (to) {
+        params.push(new Date(parseInt(to)));
+        sql += " and created<?";
+    }
     if (filter) {
         params.push('%'+filter+'%');
         params.push('%'+filter+'%');
