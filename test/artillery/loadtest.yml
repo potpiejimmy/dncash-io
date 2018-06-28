@@ -1,0 +1,47 @@
+config:
+  target: 'https://dncashapi.dn-sol.net/dnapi'
+  phases:
+    - duration: 1
+      arrivalRate: 10
+  processor: "./loadtest.js"
+  variables:
+    tokenApiKey: "qdhe3h077g362knxh10v92w6cdye50yneu8khrxd2b4q3d6dzkag391p32zvyzm1"
+    tokenApiSecret: "wr9gttppbdvufq66f3wj280zkkyurwwyrjwntu855nfr4am9kjb0nw85310m2jrm"
+    tokenDevice: "d972a3c3-ca94-4ce1-9856-b9ff7dc482bf"
+    tokenPubKey: "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAs29fZk3/alzQyNwbmZvKnA7BN1KA6fHmyTfaFvSmUqMlVQf9Q3DbOvdMgcnm\ntK4E4jGU8O4lA+MRknOASbj2CiD/hk32VdzCgPWqT2hA1dlGNUiqFqlkXRJMLAxKMxm3HZTt\nJ+PCbAeh0+oQF0PWMUpyDg2+5fyKrpnLmfoOHgFp034fOoJyd0I2YdFMN/asYk5hKVoQ+skL\nVSza9qqXGT1YsakTjf9KOwe24Z+7fLcr8/ZyCQo2xGqltbUjm3U/YUVhvcVNxuC/LJci/dNk\ngSqcedMNB7GhRVjMqQziq7wM3jmzb7tDwqFmK5xxUZvBoGbZmj9MiXn42sWw3lmTsQIDAQAB\n-----END RSA PUBLIC KEY-----\n"
+    tokenPrivKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIEpQIBAAKCAQEAs29fZk3/alzQyNwbmZvKnA7BN1KA6fHmyTfaFvSmUqMlVQf9Q3DbOvdM\ngcnmtK4E4jGU8O4lA+MRknOASbj2CiD/hk32VdzCgPWqT2hA1dlGNUiqFqlkXRJMLAxKMxm3\nHZTtJ+PCbAeh0+oQF0PWMUpyDg2+5fyKrpnLmfoOHgFp034fOoJyd0I2YdFMN/asYk5hKVoQ\n+skLVSza9qqXGT1YsakTjf9KOwe24Z+7fLcr8/ZyCQo2xGqltbUjm3U/YUVhvcVNxuC/LJci\n/dNkgSqcedMNB7GhRVjMqQziq7wM3jmzb7tDwqFmK5xxUZvBoGbZmj9MiXn42sWw3lmTsQID\nAQABAoIBAEOYtFbFEXCPULQqf1dJ4nUR9eYSdbAsSiYJnWZCehntjhXPcbCjZmN7YF4QopH0\ncLCJvzNYc6dYNnl2e6DKRh4gukJtQlysUrXkVmmdu7cUKCfQnQr2e3G4f+ukIZvIlzxUq1b4\nrXinE2bS6YbqLlnZUshKk1zu24vVMmdqVUEl40IWJS7+fK04vEKHA4GyZ6eWbDk8JP7O98yT\nCXXnQRYZZZTeG8m62FkyW9iPbIBugIDRzqJSDfpWu/mhiRbkbKfoeyjs6iR7mmCw+uZ9UfmR\neouBI5Kdf2b8IAKbeelLzdiUySpqJleNx60yC5gWYr4SFYJKoy9YgtW1ev3pC+UCgYEA5la0\nQfErowwwOCaGEwfOEbVB9SMA6+0viy/FikF0Lz3JBMhWIR+oYdKc6iZiO0ddaS2OUXZ6uMoW\nYnDxIsR8Lxd6ly14NvN+3VtpznbuNywOkSogaPjzTzt6UvevnoI4H6+7Sxvc705Pjhok6h8t\n2v13qvwbdL1xUf2GeyjW9LcCgYEAx2zjgQ2IwC3JCCmSBcLMO8y+58WZtcYLKL2CC9Eg+Rze\nCv5y6GU/60JId7I3Zzh7ZgVlKDFAMoTEvgiexWkeVZ9LHf+sdmHYND9dV8R+v1Q5NgLQpd1F\nsqQ0vCvT0eX0NffKciprnCNmGkZEyNIp7xfDdd6aPdP6xrcrMLz8YtcCgYEAvgTPJgtAFX0r\nllbpim+I54Dhjco3q2n7K9bYHutKXuKYn9Jpg1/rd+/YtS2/IeoIvIjxfHDCYwmMF9/Wffkb\n/XlgD7FaF/MeOJx+F+5zLJ6y0bywCgk+J6IIksN0ZM5GYJWHbDnrNJwk8zTMOTxJhvxNKYhb\nWh4iiyIcPCP/2NcCgYEACgCNHJDoNfNV7OHg4AcYJTusq4U+o15OevmeRydzBuuKu3RtoPhL\nD2qgpdg7bSLpFYHZw/1MYfxEvd9Cz1XpXpQBuXx0Uu+vX1d6QAer776yq+HSQy9o6n/P4Uw1\ncIafDAHklntIMGmaGmFB2+ymi8ZeWFAU3lr+be8L7ILeCbsCgYEAoGgqB/lY5IrG8MS+wQzy\nPLWtYsopHvwrTm7DTF+4MkqrrYIzYLQCUXwctkkRKPpauu0jJr7BE8ZdKRe5b4MzUEy2Cv5v\n36aDFRBiQzVykuI8hRxry/GjNT/5JVk7CpIGWqEsE0TFF3Jq+1VhueBwpPRSng8+M7rvVelE\naBb4YuI=\n-----END RSA PRIVATE KEY-----\n"
+    cashApiKey: "3uqh8da2dca61yg9uw56yybb0xvwe52avt3051c23dd8t5fzybdvzwf4jpr5b5wp"
+    cashApiSecret: "3ry44478upah7wk9pk2a8txkefwnq353j7krc8dekxecm400w42amvq0y0m4xhu2"
+    cashDevice: "9c97633b-19c7-45fa-9d68-a4f6893778fc"
+scenarios:
+  - flow:
+    - post:
+        url: "/token/v1/tokens"
+        headers:
+          DN-API-KEY: "{{tokenApiKey}}"
+          DN-API-SECRET: "{{tokenApiSecret}}"
+        json:
+          device_uuid: "{{tokenDevice}}"
+          amount: 10000
+          symbol: "EUR"
+          type: "CASHOUT"
+          refname: "loadtest"
+        capture:
+          - json: "$.uuid"
+            as: "tokenid"
+          - json: "$.secure_code"
+            as: "securecode"
+        afterResponse: "decodeToken"
+    - get:
+        url: "/cash/v1/tokens/{{radiocode}}?device_uuid={{cashDevice}}"
+        headers:
+          DN-API-KEY: "{{cashApiKey}}"
+          DN-API-SECRET: "{{cashApiSecret}}"
+    - put:
+        url: "/cash/v1/tokens/{{tokenid}}?device_uuid={{cashDevice}}"
+        headers:
+          DN-API-KEY: "{{cashApiKey}}"
+          DN-API-SECRET: "{{cashApiSecret}}"
+        json:
+          state: "COMPLETED"
+          lockrefname: "cashtsa_000173"
