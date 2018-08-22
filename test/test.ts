@@ -1158,17 +1158,19 @@ describe("clearingapi.v1:", () => {
         });
     });
 
-    describe("Read clearing data (ok) | GET /", () => {
+    let clearingSingleUUID;
+    describe("Read token clearing data (ok) | GET /tokens", () => {
         before(() => db.querySingle("update customer set roles='user'"));
         it("should return one clearing with refnames 'custref1234' and 'cashref1234'", done => {
             chai.request(app)
-            .get("/dnapi/clearing/v1")
+            .get("/dnapi/clearing/v1/tokens")
             .set("DN-API-KEY", clearingApiKey)
             .set("DN-API-SECRET", clearingApiSecret)
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
                 res.body.length.should.be.eql(1);
+                res.body[0].should.have.property('uuid');
                 res.body[0].should.have.property('refname');
                 res.body[0].refname.should.be.eql('custref1234');
                 res.body[0].should.have.property('lockrefname');
@@ -1176,6 +1178,29 @@ describe("clearingapi.v1:", () => {
                 res.body[0].should.have.property('debitor');
                 res.body[0].debitor.should.have.property('iban');
                 res.body[0].debitor.iban.should.be.eql('DE1234123412341234');
+                clearingSingleUUID = res.body[0].uuid;
+                done();
+            });
+        });
+    });
+
+    describe("Read clearing data single token (ok) | GET /tokens/:uuid", () => {
+        it("should return single clearing with refnames 'custref1234' and 'cashref1234'", done => {
+            chai.request(app)
+            .get("/dnapi/clearing/v1/tokens/"+clearingSingleUUID)
+            .set("DN-API-KEY", clearingApiKey)
+            .set("DN-API-SECRET", clearingApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('uuid');
+                res.body.should.have.property('refname');
+                res.body.refname.should.be.eql('custref1234');
+                res.body.should.have.property('lockrefname');
+                res.body.lockrefname.should.be.eql('cashref1234');
+                res.body.should.have.property('debitor');
+                res.body.debitor.should.have.property('iban');
+                res.body.debitor.iban.should.be.eql('DE1234123412341234');
                 done();
             });
         });

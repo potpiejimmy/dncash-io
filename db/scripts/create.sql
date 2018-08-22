@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `clearing` (
   INDEX `fk_clearing_token1_idx` (`token_id` ASC),
   INDEX `fk_clearing_customer1_idx` (`debitor_id` ASC),
   INDEX `fk_clearing_customer2_idx` (`creditor_id` ASC),
+  UNIQUE INDEX `token_id_UNIQUE` (`token_id` ASC),
   CONSTRAINT `fk_clearing_token1`
     FOREIGN KEY (`token_id`)
     REFERENCES `token` (`id`)

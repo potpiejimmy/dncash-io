@@ -39,12 +39,16 @@ export function getClearingData(user: any, filters: any): Promise<any> {
         stmt += " and t.type=?";
         params.push(filters.type);
     }
+    if (filters.uuid) {
+        stmt += " and t.uuid=?";
+        params.push(filters.uuid);
+    }
     return db.querySingle(stmt, params).then(res => {
             res.forEach(c => {
                 c.debitor = JSON.parse(c.debitor);
                 c.creditor = JSON.parse(c.creditor);
             });
-            return res;
+            return filters.uuid ? res[0] : res;
         });
 }
 

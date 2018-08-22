@@ -129,10 +129,10 @@ export const clearingApiV1: Router = Router();
 
 /**
  * @swagger
- * /dnapi/clearing/v1/:
+ * /dnapi/clearing/v1/tokens:
  *   get:
- *     summary: Retrieves clearing data
- *     description: Reads and returns clearing data for the authenticated customer (or for given customer_id for administrators).
+ *     summary: Retrieves token clearing data
+ *     description: Reads and returns detailed token clearing data for the authenticated customer (or for given customer_id for administrators).
  *     tags:
  *       - Clearing API
  *     produces:
@@ -182,8 +182,51 @@ export const clearingApiV1: Router = Router();
  *         schema:
  *           $ref: '#/definitions/unauthorized'
  */
-clearingApiV1.get("/", function (request: Request, response: Response, next: NextFunction) {
+clearingApiV1.get("/tokens", function (request: Request, response: Response, next: NextFunction) {
     Clearing.getClearingData(request.user, request.query)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/clearing/v1/tokens/{uuid}:
+ *   get:
+ *     summary: Retrieves clearing data for a specific token
+ *     description: Reads and returns the clearing data for the given token UUID.
+ *     tags:
+ *       - Clearing API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Clearing API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Clearing API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: uuid
+ *         description: A token UUID
+ *         in: path
+ *         required: true
+ *         type: string
+ * 
+ *     responses:
+ *       200:
+ *         description: Returns clearing data
+ *         schema:
+ *           $ref: '#/definitions/clearing_data_response'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ */
+clearingApiV1.get("/tokens/:uid", function (request: Request, response: Response, next: NextFunction) {
+    Clearing.getClearingData(request.user, {uuid:request.params.uid})
     .then(res => response.json(res))
     .catch(err => next(err));
 });
