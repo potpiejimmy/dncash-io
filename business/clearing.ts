@@ -1,7 +1,7 @@
 import * as db from "../util/db";
 import * as Param from "./param";
 import * as Login from "./login";
-import { clearingChangeNotifier } from "../util/notifier";
+import { changeNotifier } from "../util/notifier";
 
 export function addClearing(token: any, debitor_id: number, creditor_id: number): Promise<any> {
     return Param.readParam(debitor_id, "clearing-account").then(debitor_account =>
@@ -13,8 +13,8 @@ export function addClearing(token: any, debitor_id: number, creditor_id: number)
                 debitor_account: JSON.stringify(debitor_account),
                 creditor_account: JSON.stringify(creditor_account)
            }]).then(() => {
-                clearingChangeNotifier.notifyObservers(debitor_id.toString(), {uuid: token.uuid})
-                if (creditor_id != debitor_id) clearingChangeNotifier.notifyObservers(creditor_id.toString(), {uuid: token.uuid})
+                changeNotifier.notifyObservers("clearing:"+debitor_id, {uuid: token.uuid})
+                if (creditor_id != debitor_id) changeNotifier.notifyObservers("clearing:"+creditor_id, {uuid: token.uuid})
                 return null; // notify asynchronously
            })));
 }

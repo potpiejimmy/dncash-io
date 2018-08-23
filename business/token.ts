@@ -10,7 +10,7 @@ import * as uuid from "uuid/v4"; // Random-based UUID
 import * as config from '../config';
 import * as Utils from '../util/utils';
 import * as logging from "../util/logging";
-import { tokenChangeNotifier } from "../util/notifier";
+import { changeNotifier } from "../util/notifier";
 
 export function createToken(customer: any, token: any): Promise<any> {
     return Device.findByCustomerAndUUID(customer, token.device_uuid).then(device => {
@@ -48,7 +48,7 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.info = JSON.stringify(token.info); // save info data as string
             if (token.expires) token.expires = new Date(token.expires);
             return insertNew(token).then(id => findById(id)).then(t => {
-                tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
+                changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
                 journalizeToken(customer.id, "token", "create", t);
                 createdToken = exportToken(t);
                 retries = 0;
@@ -109,7 +109,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
         if (!device) return;
         return db.querySingle("update token set state='DELETED',plain_code=null,secure_code='' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]).then(res => {
             if (res.affectedRows) {
-                tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
+                changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
                 return findByUUID(uid).then(t => {
                     journalizeToken(customer.id, "token", "delete", t);
                     return exportToken(t);
@@ -163,8 +163,8 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
 
             return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
-                tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: uid});
-                if (token.owner_id != customer.id) tokenChangeNotifier.notifyObservers(customer.id, {uuid: uid});
+                changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: uid});
+                if (token.owner_id != customer.id) changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
                 // re-read and export:
                 return findById(token.id).then(t => {
                     journalizeToken(token.owner_id, "token", "confirm", t);
@@ -260,8 +260,8 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
 function atomicLockAndReturn(cashDevice: any, token: any, action: string, state: string): Promise<any> {
     return atomicLockTokenDB(token.id, cashDevice.id, state).then(success => {
         if (!success) throw "Token not in OPEN state.";
-        tokenChangeNotifier.notifyObservers(token.owner_id, {uuid: token.uuid});
-        if (token.owner_id != cashDevice.customer_id) tokenChangeNotifier.notifyObservers(cashDevice.customer_id, {uuid: token.uuid});
+        changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: token.uuid});
+        if (token.owner_id != cashDevice.customer_id) changeNotifier.notifyObservers("token:"+cashDevice.customer_id, {uuid: token.uuid});
         // re-read and export:
         return findById(token.id).then(t => {
             journalizeToken(token.owner_id, "token", action, t);

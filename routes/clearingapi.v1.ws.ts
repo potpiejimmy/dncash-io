@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from '../business/access';
-import { clearingChangeNotifier } from "../util/notifier";
+import { changeNotifier } from "../util/notifier";
 import * as uuid from "uuid/v4"; // Random-based UUID
 
 export const clearingApiV1Ws: Router = Router();
@@ -42,19 +42,19 @@ export const clearingApiV1Ws: Router = Router();
 clearingApiV1Ws.ws("/change/:listenKey", function (ws: WebSocket, req: Request) {
     let wsid = uuid();
     Access.findByKey(req.params.listenKey).then(access => {
-        if (!access) {
+        if (!access || access.scope!='clearing-api') {
             ws.close();
             return;
         }
-        clearingChangeNotifier.addObserver(access.customer_id, wsid, t => {
+        changeNotifier.addObserver("clearing:"+access.customer_id, wsid, t => {
             try {
                 ws.send(JSON.stringify(t));
             } catch (err) {
-                clearingChangeNotifier.removeObserver(access.customer_id, wsid);
+                changeNotifier.removeObserver("clearing:"+access.customer_id, wsid);
             }
         });
         ws.onclose = () => {
-            clearingChangeNotifier.removeObserver(access.customer_id, wsid);
+            changeNotifier.removeObserver("clearing:"+access.customer_id, wsid);
         }
     });
 });

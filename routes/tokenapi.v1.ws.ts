@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from '../business/access';
-import { tokenChangeNotifier } from "../util/notifier";
+import { changeNotifier } from "../util/notifier";
 import * as uuid from "uuid/v4"; // Random-based UUID
 
 export const tokenApiV1Ws: Router = Router();
@@ -42,19 +42,19 @@ export const tokenApiV1Ws: Router = Router();
 tokenApiV1Ws.ws("/tokenchange/:listenKey", function (ws: WebSocket, req: Request) {
     let wsid = uuid();
     Access.findByKey(req.params.listenKey).then(access => {
-        if (!access) {
+        if (!access || access.scope!='token-api') {
             ws.close();
             return;
         }
-        tokenChangeNotifier.addObserver(access.customer_id, wsid, t => {
+        changeNotifier.addObserver("token:"+access.customer_id, wsid, t => {
             try {
                 ws.send(JSON.stringify(t));
             } catch (err) {
-                tokenChangeNotifier.removeObserver(access.customer_id, wsid);
+                changeNotifier.removeObserver("token:"+access.customer_id, wsid);
             }
         });
         ws.onclose = () => {
-            tokenChangeNotifier.removeObserver(access.customer_id, wsid);
+            changeNotifier.removeObserver("token:"+access.customer_id, wsid);
         }
     });
 });

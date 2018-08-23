@@ -53,5 +53,4 @@ class RedisNotifier {
     }
 }
 
-export let tokenChangeNotifier = new RedisNotifier();
-export let clearingChangeNotifier = new RedisNotifier();
+export let changeNotifier = new RedisNotifier();
