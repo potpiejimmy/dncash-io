@@ -45,6 +45,7 @@ import { tokenApiV1Ws } from "./routes/tokenapi.v1.ws";
 import { cashApiV1 } from "./routes/cashapi.v1";
 import { mobileApiV1 } from "./routes/mobileapi.v1";
 import { clearingApiV1 } from "./routes/clearingapi.v1";
+import { clearingApiV1Ws } from "./routes/clearingapi.v1.ws";
 
 app.use(nocache());
 app.use(json());
@@ -85,6 +86,7 @@ app.use("/dnapi/mobile/v1", mobileApiV1);
 // WebSocket routes (unsecured)
 app.use("/dnapi/adminws/v1", routerAdminV1Ws);
 app.use("/dnapi/tokenws/v1", tokenApiV1Ws);
+app.use("/dnapi/clearingws/v1", clearingApiV1Ws);
 
 if (app.get('env') === 'production') {
     app.set('trust proxy', 1) // trust first proxy, allows sending secure cookies even if SSL terminated on proxy  

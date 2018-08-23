@@ -180,9 +180,9 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
 function clearToken(token: any, cash_customer_id: number): Promise<void> {
     if (token.state === 'COMPLETED')  {
         if (token.type === 'CASHOUT') {
-            return Clearing.addClearing(token.id, token.owner_id, cash_customer_id);
+            return Clearing.addClearing(token, token.owner_id, cash_customer_id);
         } else if (token.type === 'CASHIN') {
-            return Clearing.addClearing(token.id, cash_customer_id, token.owner_id);
+            return Clearing.addClearing(token, cash_customer_id, token.owner_id);
         }
     }
     return Promise.resolve();

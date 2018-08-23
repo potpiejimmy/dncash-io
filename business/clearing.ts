@@ -1,17 +1,22 @@
 import * as db from "../util/db";
 import * as Param from "./param";
 import * as Login from "./login";
+import { clearingChangeNotifier } from "../util/notifier";
 
-export function addClearing(token_id: number, debitor_id: number, creditor_id: number): Promise<any> {
+export function addClearing(token: any, debitor_id: number, creditor_id: number): Promise<any> {
     return Param.readParam(debitor_id, "clearing-account").then(debitor_account =>
            Param.readParam(creditor_id, "clearing-account").then(creditor_account =>
            db.querySingle("insert into clearing set ?", [{
-                token_id: token_id,
+                token_id: token.id,
                 debitor_id: debitor_id,
                 creditor_id: creditor_id,
                 debitor_account: JSON.stringify(debitor_account),
                 creditor_account: JSON.stringify(creditor_account)
-           }])));
+           }]).then(() => {
+                clearingChangeNotifier.notifyObservers(debitor_id.toString(), {uuid: token.uuid})
+                if (creditor_id != debitor_id) clearingChangeNotifier.notifyObservers(creditor_id.toString(), {uuid: token.uuid})
+                return null; // notify asynchronously
+           })));
 }
 
 export function getClearingData(user: any, filters: any): Promise<any> {
