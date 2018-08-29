@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from "../business/access";
 import * as Device from "../business/device";
+import * as Account from "../business/account";
 import * as Token from "../business/token";
 import * as Journal from "../business/journal";
 import * as Param from "../business/param";
@@ -147,6 +148,62 @@ routerAdminV1.get("/devices", function (request: Request, response: Response, ne
  */
 routerAdminV1.delete("/devices/:id", function (request: Request, response: Response, next: NextFunction) {
     Device.deleteByCustomerAndId(request.user, request.params.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------ accounts ------------------------
+
+/*
+ * Returns all accounts for the authenticated user
+ */
+routerAdminV1.put("/accounts/create", function (request: Request, response: Response, next: NextFunction) {
+    Account.create(request.user, request.body.account)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Returns all accounts for the authenticated user
+ */
+routerAdminV1.get("/accounts", function (request: Request, response: Response, next: NextFunction) {
+    Account.findByCustomer(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Deletes the given account for the authenticated user
+ */
+routerAdminV1.post("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
+    Account.findById(request.params.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Deletes the given account for the authenticated user
+ */
+routerAdminV1.delete("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
+    Account.deleteByCustomerAndId(request.user, request.params.id)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Returns the default account for the authenticated user
+ */
+routerAdminV1.get("/accounts/default", function (request: Request, response: Response, next: NextFunction) {
+    Account.findDefaultAccountByCustomerId(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/*
+ * Changes the default account for the authenticated user
+ */
+routerAdminV1.put("/accounts/default/:id", function (request: Request, response: Response, next: NextFunction) {
+    Account.updateDefaultAccountByCustomerId(request.user, request.params.id)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

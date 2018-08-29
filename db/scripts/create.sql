@@ -205,6 +205,27 @@ ENGINE = InnoDB
 COMMENT = 'holds clearing data for completed tokens that need to be settled';
 
 
+-- -----------------------------------------------------
+-- Table `customer_account`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `customer_account` (
+  `id` INT NOT NULL AUTO_INCREMENT COMMENT 'auto-generated ID',
+  `customer_id` INT NOT NULL,
+  `value` VARCHAR(80) NOT NULL COMMENT 'the account\'s address (Walletaddress or IBAN)',
+  `type` ENUM('BANKACCOUNT', 'CREDITCARD', 'CRYPTOWALLET') NOT NULL DEFAULT 'BANKACCOUNT' COMMENT 'the account\'s type (Bankaccount, Creditcard or Cryptowallet)',
+  `default` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'determines if the account is the default account for clearing',
+  `symbol` VARCHAR(5) NULL COMMENT 'the account\'s symbol, e.g. EUR, USD, XRP, BTC',
+  `refname` VARCHAR(80) NULL COMMENT 'a custom reference name set by the user',
+  PRIMARY KEY (`id`),
+  INDEX `fk_customer_account_customer1_idx` (`customer_id` ASC),
+  CONSTRAINT `fk_customer_account_customer1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `customer` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
