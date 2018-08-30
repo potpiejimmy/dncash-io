@@ -155,10 +155,10 @@ routerAdminV1.delete("/devices/:id", function (request: Request, response: Respo
 // ------ accounts ------------------------
 
 /*
- * Returns all accounts for the authenticated user
+ * Creates a new account for the authenticated user
  */
-routerAdminV1.put("/accounts/create", function (request: Request, response: Response, next: NextFunction) {
-    Account.create(request.user, request.body.account)
+routerAdminV1.post("/accounts", function (request: Request, response: Response, next: NextFunction) {
+    Account.create(request.user, request.body)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
@@ -167,15 +167,15 @@ routerAdminV1.put("/accounts/create", function (request: Request, response: Resp
  * Returns all accounts for the authenticated user
  */
 routerAdminV1.get("/accounts", function (request: Request, response: Response, next: NextFunction) {
-    Account.findByCustomer(request.user)
+    Account.findByCustomer(request.user, request.query)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
 
 /*
- * Deletes the given account for the authenticated user
+ * gets a customer account by account id
  */
-routerAdminV1.post("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
+routerAdminV1.get("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
     Account.findById(request.params.id)
     .then(res => response.json(res))
     .catch(err => next(err));
@@ -185,28 +185,20 @@ routerAdminV1.post("/accounts/:id", function (request: Request, response: Respon
  * Deletes the given account for the authenticated user
  */
 routerAdminV1.delete("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
-    Account.deleteByCustomerAndId(request.user, request.params.id)
+    Account.deleteAccount(request.user, request.params.id)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
 
 /*
- * Returns the default account for the authenticated user
+ *updates a customer account by account id
  */
-routerAdminV1.get("/accounts/default", function (request: Request, response: Response, next: NextFunction) {
-    Account.findDefaultAccountByCustomerId(request.user)
+routerAdminV1.put("/accounts/:id", function (request: Request, response: Response, next: NextFunction) {
+    Account.updateAccount(request.user, request.params.id, request.body)
     .then(res => response.json(res))
     .catch(err => next(err));
 });
 
-/*
- * Changes the default account for the authenticated user
- */
-routerAdminV1.put("/accounts/default/:id", function (request: Request, response: Response, next: NextFunction) {
-    Account.updateDefaultAccountByCustomerId(request.user, request.params.id)
-    .then(res => response.json(res))
-    .catch(err => next(err));
-});
 
 // ------- statistics ---------------
 

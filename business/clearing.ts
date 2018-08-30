@@ -1,11 +1,11 @@
 import * as db from "../util/db";
-import * as Param from "./param";
+import * as Accounts from "./account";
 import * as Login from "./login";
 import { changeNotifier } from "../util/notifier";
 
 export function addClearing(token: any, debitor_id: number, creditor_id: number): Promise<any> {
-    return Param.readParam(debitor_id, "clearing-account").then(debitor_account =>
-           Param.readParam(creditor_id, "clearing-account").then(creditor_account =>
+    return Accounts.findByCustomer(debitor_id, "default=1").then(debitor_account => debitor_account[0]).then(debitor_account =>
+        Accounts.findByCustomer(creditor_id, "default=1").then(creditor_account => creditor_account[0]).then(creditor_account =>
            db.querySingle("insert into clearing set ?", [{
                 token_id: token.id,
                 debitor_id: debitor_id,
