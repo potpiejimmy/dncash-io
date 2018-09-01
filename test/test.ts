@@ -35,7 +35,7 @@ let triggerCode;
 
 function purgeDB(): Promise<void> {
     return db.connection().then(c => {
-        let tables = ['clearing','journal','token','customer_device','customer_access','customer_param','customer'];
+        let tables = ['clearing','journal','token','customer_device','customer_account','customer_access','customer_param','customer'];
         tables.forEach(t => db.query(c, "delete from " + t));
         c.release();
         console.log("\n** DB purged **\n");
@@ -525,6 +525,174 @@ describe("admin.v1:", () => {
             .send("\"false\"")
             .end((err, res) => {
                 res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    //accounts
+    describe("Set an account (ok) | POST /accounts", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/accounts")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({value:"r4PnyAddVharLaKfeubbc8M8ihzhrLYNvo",type:"CRYPTOWALLET",default:0,symbol:"XRP",refname:"XRP"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Set an account (ok) | POST /accounts", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .post("/dnapi/admin/v1/accounts")
+            .set("authorization", "Bearer "+sessionToken)
+            .send({value:"164616416416",type:"CREDITCARD",default:0,symbol:"MC",refname:"MC"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Get all accounts (ok) | GET /accounts", () => {
+        it("should return all accounts of customer", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/accounts")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.should.have.lengthOf(2);
+                done();
+            });
+        });
+    });
+
+    let account_id;
+    describe("Get the default account (ok) | GET /accounts?default=1", () => {
+        it("should return the default account of customer", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/accounts?default=1")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.should.have.lengthOf(1);
+                res.body[0].should.have.property('id');
+                res.body[0].should.have.property('customer_id');
+                res.body[0].should.have.property('value');
+                res.body[0].should.have.property('type');
+                res.body[0].should.have.property('default');
+                res.body[0].should.have.property('symbol');
+                res.body[0].should.have.property('refname');
+                res.body[0].default.should.be.eql(1);
+                res.body[0].value.should.be.eql('r4PnyAddVharLaKfeubbc8M8ihzhrLYNvo');
+                res.body[0].type.should.be.eql('CRYPTOWALLET');
+                res.body[0].symbol.should.be.eql('XRP');
+                account_id = res.body[0].id;
+                done();
+            });
+        });
+    });
+
+    describe("Get an account by id (ok) | GET /accounts/:id", () => {
+        it("should return the given account of customer", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/accounts/"+account_id)
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('id');
+                res.body.should.have.property('customer_id');
+                res.body.should.have.property('value');
+                res.body.should.have.property('type');
+                res.body.should.have.property('default');
+                res.body.should.have.property('symbol');
+                res.body.should.have.property('refname');
+                res.body.id.should.be.eql(account_id);
+                res.body.default.should.be.eql(1);
+                res.body.value.should.be.eql('r4PnyAddVharLaKfeubbc8M8ihzhrLYNvo');
+                res.body.type.should.be.eql('CRYPTOWALLET');
+                res.body.symbol.should.be.eql('XRP');
+                done();
+            });
+        });
+    });
+
+    describe("Update an account by id (ok) | PUT /accounts/:id", () => {
+        it("should update the given account of the customer", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/accounts/"+account_id)
+            .set("authorization", "Bearer "+sessionToken)
+            .send({id: account_id, value:"abcdef",type:"BANKACCOUNT",default:0,symbol:"EUR",refname:"EUR"})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Get the default account (ok) | GET /accounts?default=1", () => {
+        it("should return the updated default account of customer", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/accounts?default=1")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('array');
+                res.body.should.have.lengthOf(1);
+                res.body[0].should.have.property('id');
+                res.body[0].should.have.property('customer_id');
+                res.body[0].should.have.property('value');
+                res.body[0].should.have.property('type');
+                res.body[0].should.have.property('default');
+                res.body[0].should.have.property('symbol');
+                res.body[0].should.have.property('refname');
+                res.body[0].id.should.be.eql(account_id);
+                res.body[0].default.should.be.eql(1);
+                res.body[0].value.should.be.eql('abcdef');
+                res.body[0].type.should.be.eql('BANKACCOUNT');
+                res.body[0].symbol.should.be.eql('EUR');
+                done();
+            });
+        });
+    });
+
+    describe("Delete the given accoun (ok) | DELETE /accounts/:id", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .delete("/dnapi/admin/v1/accounts/"+account_id)
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Get all accounts (ok) | GET /accounts", () => {
+        it("should return all accounts of customer", done => {
+            chai.request(app)
+            .get("/dnapi/admin/v1/accounts")
+            .set("authorization", "Bearer "+sessionToken)
+            .end((err, res) => {
+                res.body.should.be.a('array');
+                res.body.should.have.lengthOf(1);
+                res.body[0].should.have.property('id');
+                res.body[0].should.have.property('customer_id');
+                res.body[0].should.have.property('value');
+                res.body[0].should.have.property('type');
+                res.body[0].should.have.property('default');
+                res.body[0].should.have.property('symbol');
+                res.body[0].should.have.property('refname');
+                res.body[0].default.should.be.eql(1);
+                res.body[0].value.should.be.eql('164616416416');
+                res.body[0].type.should.be.eql('CREDITCARD');
+                res.body[0].symbol.should.be.eql('MC');
                 done();
             });
         });
