@@ -549,7 +549,7 @@ describe("admin.v1:", () => {
             chai.request(app)
             .post("/dnapi/admin/v1/accounts")
             .set("authorization", "Bearer "+sessionToken)
-            .send({value:"164616416416",type:"CREDITCARD",default:0,symbol:"MC",refname:"MC"})
+            .send({value:"DE1234123412341234",type:"BANKACCOUNT",default:0,symbol:"EUR",refname:"EUR"})
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
@@ -690,9 +690,9 @@ describe("admin.v1:", () => {
                 res.body[0].should.have.property('symbol');
                 res.body[0].should.have.property('refname');
                 res.body[0].default.should.be.eql(1);
-                res.body[0].value.should.be.eql('164616416416');
-                res.body[0].type.should.be.eql('CREDITCARD');
-                res.body[0].symbol.should.be.eql('MC');
+                res.body[0].value.should.be.eql('DE1234123412341234');
+                res.body[0].type.should.be.eql('BANKACCOUNT');
+                res.body[0].symbol.should.be.eql('EUR');
                 done();
             });
         });
@@ -1344,8 +1344,8 @@ describe("clearingapi.v1:", () => {
                 res.body[0].should.have.property('lockrefname');
                 res.body[0].lockrefname.should.be.eql('cashref1234');
                 res.body[0].should.have.property('debitor');
-                res.body[0].debitor.should.have.property('iban');
-                res.body[0].debitor.iban.should.be.eql('DE1234123412341234');
+                res.body[0].debitor.should.have.property('value');
+                res.body[0].debitor.value.should.be.eql('DE1234123412341234');
                 clearingSingleUUID = res.body[0].uuid;
                 done();
             });
@@ -1367,8 +1367,8 @@ describe("clearingapi.v1:", () => {
                 res.body.should.have.property('lockrefname');
                 res.body.lockrefname.should.be.eql('cashref1234');
                 res.body.should.have.property('debitor');
-                res.body.debitor.should.have.property('iban');
-                res.body.debitor.iban.should.be.eql('DE1234123412341234');
+                res.body.debitor.should.have.property('value');
+                res.body.debitor.value.should.be.eql('DE1234123412341234');
                 done();
             });
         });

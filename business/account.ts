@@ -17,8 +17,12 @@ export function findById(id: number): Promise<any> {
 }
 
 export function findByCustomer(customer: any, query: any = {}): Promise<any> {
+    return findByCustomerId(customer.id, query);
+}
+
+export function findByCustomerId(customer_id: number, query: any = {}): Promise<any> {
     let stmt = "select * from customer_account ca where ca.customer_id=?";
-    let params = [customer.id];
+    let params = [customer_id];
     if (query.default) {
         stmt += " and ca.default=?";
         params.push(parseInt(query.default));
