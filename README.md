@@ -8,7 +8,7 @@ Each customer that registers with dncash-io typically uses one or more of the fo
 
 ## Live Demo
 
-Go to https://dncash.dnpv-serv.de, use dncash/nixdorf as landing page credentials.
+Go to https://dncash.dn-sol.net, use dncash/nixdorf as landing page credentials.
 
 ## Development Setup
 
