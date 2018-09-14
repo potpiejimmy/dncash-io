@@ -32,7 +32,7 @@ export const mobileApiV1: Router = Router();
  *           properties:
  *             triggercode:
  *               type: string
- *               description: The trigger code scanned from the ATM
+ *               description: The trigger code scanned or received from the ATM
  *               example: 75442486-0878-440c-9db1-a7006c25a39f
  *             radiocode:
  *               type: string

@@ -190,11 +190,12 @@ cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, ne
  *                  to the cash device, but vice-versa only.
  *                  This method returns a random, globally unique trigger code that is only valid for the given
  *                  period of time (for instance, 60 seconds) before it expires.
- *                  After receiving the trigger code, the ATM opens a GET request on the /triggers/{triggercode}
- *                  endpoint to receive an instant and locked token as soon as it is triggered by the
- *                  mobile device. After opening the endpoint, the ATM should display the unique
- *                  trigger code rendered as a QR-code on the screen, allowing the mobile device to scan
- *                  the QR-code and securely verify and push a locked token onto the ATM.
+ *                  After receiving the trigger code, the ATM either opens a GET request on the /trigger/{triggercode}
+ *                  API endpoint or it subscribes to the MQTT topic 'dncash-io/trigger/{triggercode}' (if dncash.io is 
+ *                  configured for MQTT support) to receive an instant and locked token as soon as it is triggered by the
+ *                  mobile device. After opening the endpoint or after subscribing to the MQTT topic, the ATM should display the unique
+ *                  trigger code either rendered as a QR-code on the screen or broadcast via NFC, allowing the mobile device to scan
+ *                  the QR-code or receive the NFC data and securely verify and push a locked token onto the ATM via the Mobile API.
  *                  
  *     tags:
  *       - Cash API

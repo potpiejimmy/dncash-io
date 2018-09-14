@@ -35,11 +35,11 @@ to drop and recreate all database tables (make sure the mysql executable is in y
 
 ### Redis (optional)
 
-Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. It is also used to support atomic single executions of scheduled jobs in the cluster. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS_URL=redis://host:port if Redis is not running locally.
+Redis is used to support trigger and websocket notifications in a load-balancing environment with multiple server instances. It is also used to support atomic single executions of scheduled jobs in the cluster. In a single instance or development environment, installation of Redis is optional. Set the environment variable USE\_REDIS=true if you want to enable cluster support. Optionally set the variable REDIS\_URL=redis://host:port if Redis is not running locally.
 
 ### MQTT (optional)
 
-In scenarios where the cash device is triggered by the token device (scanning / receiving of trigger codes), dncash.io can optionally publish a message to a given MQTT queue endpoint (instead of only responding to a waiting API request on the trigger endpoint). Set the environment variable USE_MQTT=true if you want to enable MQTT. Also set MQTT_URL to a valid broker endpoint address (defaults to mqtt://localhost:1883, the endpoint is checked on startup).
+In scenarios where the cash device is triggered by the token device (scanning / receiving of trigger codes by the token device), dncash.io can optionally publish a message to a given MQTT queue endpoint instead of only responding to a waiting GET request on the trigger endpoint /dnapi/cash/v1/trigger/{triggercode}. Set the environment variable USE\_MQTT=true if you want to enable MQTT. Also set MQTT\_URL to a valid broker endpoint address (defaults to mqtt://localhost:1883, the endpoint is checked on startup). dncash.io will then publish the token to the topic named 'dncash-io/trigger/{triggercode}'.
 
 ### Install / Build
 
