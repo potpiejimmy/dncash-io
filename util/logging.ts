@@ -1,7 +1,5 @@
 import * as winston from 'winston';
 
-winston.emitErrs = true;
-
 /* define logger */
 export let logger = new winston.Logger({
     transports: [

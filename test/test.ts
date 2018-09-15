@@ -3,7 +3,6 @@ process.env.NODE_ENV = 'test';
 
 import 'mocha';
 import * as chai from 'chai';
-import * as chaiHttp from 'chai-http';
 import * as crypto from 'crypto';
 import * as constants from 'constants';
 import * as jwt from 'jsonwebtoken';
@@ -12,7 +11,7 @@ import {testApp as app, appReady} from '../app';
 
 let should = chai.should();
 
-chai.use(chaiHttp);
+chai.use(require('chai-http')); // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/19480
 
 const keypair = {"public":"-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAhcr0IHoJfuv6/crCoEoafN3qrV+BJ2hjch1Q8BOP8vGa4rcFteGfcdnXTACp\nGDLaNjex6PRYJdz6eQGTroBZs+YKhxHCgHBgUYXDRDugvulhOUJyHP0QKhnOxuiBNY7Tc0id\n68f4jvkUqGnPLWRaFIlYeaoIdTyDOlsKrPIUyu/lHCgNtjRJkHXh7k5kZlut30Krx36V60dt\n7CuRpHTc5RpB1GO6Vsev7+rhKGn+A89MyElnqW32ijAH1D2Th58prcVGH5/qQsbVibg8ljex\nBYeBrmmTHZE7EBb3fZYDTFAmCkXumNjrhH051uySLslIB9HEdoATA5G2LMJ/mmIoOQIDAQAB\n-----END RSA PUBLIC KEY-----\n","private":"-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAhcr0IHoJfuv6/crCoEoafN3qrV+BJ2hjch1Q8BOP8vGa4rcFteGfcdnX\nTACpGDLaNjex6PRYJdz6eQGTroBZs+YKhxHCgHBgUYXDRDugvulhOUJyHP0QKhnOxuiBNY7T\nc0id68f4jvkUqGnPLWRaFIlYeaoIdTyDOlsKrPIUyu/lHCgNtjRJkHXh7k5kZlut30Krx36V\n60dt7CuRpHTc5RpB1GO6Vsev7+rhKGn+A89MyElnqW32ijAH1D2Th58prcVGH5/qQsbVibg8\nljexBYeBrmmTHZE7EBb3fZYDTFAmCkXumNjrhH051uySLslIB9HEdoATA5G2LMJ/mmIoOQID\nAQABAoIBABCYYPmaSY09tg8+1C9PocN1P0OsAfgiYZto+X4d3xASWdTfQM0TpFRZ4fOibVb8\nD8cD14R+smRX6ZWS1X+imf3PfeTNFiQaTEgwYE0ZXFHx3sZccI0Z8qRWOSjA9C3xflbhXf09\n+524VZCiNzl5JhdABgJpTc1E6T4Wxtc2289kDVpFCDHabecep7vMpn/tCWB+KCAEaJmYNuIY\nSxipkqT08FSpOFkLXTU4qSN0SiB5SCbefec36RyyxekjQr7m/Bk8zvMqsH6rZ8+ZLpoov2Pw\n7jdlhyCc/RWluZ3wY49+3c0Fc1e3dshUsfJNxjoIK7GiqMDynrvZyMf6Ck/gL3UCgYEA4qss\nEtpeBjXYQHCQvd1FlGPXncLl3nQiKyTF8Fa/kKdQcSvmRZ8MneT75oFQr3G2KU5u1kw/DZh3\n2AhL/+I8XQySITltgL8I//L2AodSFrnVoxpFCzZN6o2Z9Y04SwIT/jGRxBhQg2wY9lxkAhVK\nOvnnXwMSBG1VKFg1EU31X0cCgYEAlxsXzexJqH1VhLFoTBpv9/0+YR7QD3xpHImin9s2iDeh\nBgzOjEwJWiQxw0EdGWNJthlPWRi5n2QKLFXXsZ8Yknz0iCHCkASsd42YPcuGKgEcdy31Zu02\nGOfuPsLL9VNSobmM0iE2Sm+kNypM1kUx511DylUvhgWbrAnv9fgy/H8CgYB0RqDGTxSalPaJ\nH/VwIFk4JPuPp1IqCmMYxLVxc96zQtEmLQHkRxG+0Z9TAJU2Wtu6VszOy7Awtj0MKj1qV1Dl\n3rP7rSz6NYVVXvpKE8bNd6kbETfH56SSpO8MotP0zm0ZIa6H7H0o3cP0ZTK8StWYaWgCOl38\nvWVI2+7lIJu1swKBgBRo4Go8BCbx5t8pZ0EAQSdp2Ucc9lVhJIFqRcD5xv/XI7TBfhSNIKZA\nRUhuPxPyyT4DZShPoqLYzFb4sU2Yg6Ulo5HPnYv+VZ1ATtPp7ZE23TVry72/RJNQoGlxvkLA\nomSdv1uSiNa9BZ095Wr7paXufv2RS/36O/Cc1wCOKbTZAoGAShHKkheXo81JSGxE2ZAzcWsm\nVFFbtlfpmdXLMDaEKvtGGTzH6Ohble9/VVxTLzU5xjcM7UOUbrRUNkxycun3ZG/v4Ik4o7vM\nnQoi5egDaZKzlOMo2g8CBxafLs89mILc7dnqmEHylPdakWfpKI+49vyrH9C5JMABIETigQdg\ndPY=\n-----END RSA PRIVATE KEY-----\n"};
 let sessionToken;
@@ -328,7 +327,7 @@ describe("admin.v1:", () => {
     describe("Delete access Token API (ok) | DELETE /access/:id", () => {
         it("should delete API credentials", done => {
             chai.request(app)
-            .delete("/dnapi/admin/v1/access/"+tokenApiId)
+            .del("/dnapi/admin/v1/access/"+tokenApiId)
             .set("authorization", "Bearer "+sessionToken)
             .send({scope:'token-api'})
             .end((err, res) => {
@@ -495,7 +494,7 @@ describe("admin.v1:", () => {
     describe("Delete a parameter (ok) | DELETE /params/:pkey", () => {
         it("should return HTTP 200 ok", done => {
             chai.request(app)
-            .delete("/dnapi/admin/v1/params/testparam")
+            .del("/dnapi/admin/v1/params/testparam")
             .set("authorization", "Bearer "+sessionToken)
             .end((err, res) => {
                 res.should.have.status(200);
@@ -665,7 +664,7 @@ describe("admin.v1:", () => {
     describe("Delete the given accoun (ok) | DELETE /accounts/:id", () => {
         it("should return HTTP 200 ok", done => {
             chai.request(app)
-            .delete("/dnapi/admin/v1/accounts/"+account_id)
+            .del("/dnapi/admin/v1/accounts/"+account_id)
             .set("authorization", "Bearer "+sessionToken)
             .end((err, res) => {
                 res.should.have.status(200);
