@@ -134,7 +134,7 @@ export const clearingApiV1: Router = Router();
  *     summary: Retrieves token clearing data
  *     description: Reads and returns detailed token clearing data for the authenticated customer (or for given customer_id for administrators).
  *     tags:
- *       - Clearing API
+ *       - Clearing-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -195,7 +195,7 @@ clearingApiV1.get("/tokens", function (request: Request, response: Response, nex
  *     summary: Retrieves clearing data for a specific token
  *     description: Reads and returns the clearing data for the given token UUID.
  *     tags:
- *       - Clearing API
+ *       - Clearing-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -238,7 +238,7 @@ clearingApiV1.get("/tokens/:uid", function (request: Request, response: Response
  *     summary: Retrieves clearing data aggregated sums
  *     description: Reads and returns clearing data aggregated sums for the authenticated customer (or for given customer_id for administrators).
  *     tags:
- *       - Clearing API
+ *       - Clearing-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -293,7 +293,7 @@ clearingApiV1.get("/sums", function (request: Request, response: Response, next:
  *     summary: Retrieves customer data
  *     description: Reads and returns the customer data for the authenticated customer (or all for administrators).
  *     tags:
- *       - Clearing API
+ *       - Clearing-API
  *     produces:
  *       - application/json
  *     parameters:

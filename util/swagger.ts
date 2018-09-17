@@ -1,14 +1,15 @@
 import * as swaggerUI from 'swagger-ui-express';
 import * as swaggerJSDoc from 'swagger-jsdoc';
-
+import * as fs from 'fs';
 
 export function setup(app: any): void {
     var options = {
         swaggerDefinition: {
             info: {
-                title: 'dncash.io', // Title (required) 
-                version: process.env.npm_package_version // Version (required) 
-            },
+                title: 'dncash.io APIs', // Title (required) 
+                version: process.env.npm_package_version, // Version (required)
+                description: fs.readFileSync('./HOWTO.md').toString()
+            }
         },
         apis: ['./routes/*'], // Path to the API docs 
     };
@@ -23,6 +24,7 @@ export function setup(app: any): void {
     
     // ... 
     app.use('/dnapi/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, {
-        swaggerOptions: {docExpansion: 'none'}
+        swaggerOptions: {docExpansion: 'none'},
+        customCss: '.swagger-ui .info code { background: none; color: black; font-weight: normal; font-size: .9em; }'
     })); // line 45 
 }

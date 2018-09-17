@@ -17,7 +17,7 @@ export const clearingApiV1Ws: Router = Router();
  *                  The clearing data change endpoint immediately notifies the listener about a new clearing entry. Note that only the token UUID
  *                  is reported on this interface for performance and security reasons.
  *     tags:
- *       - Clearing API
+ *       - Clearing-API
  *     produces:
  *       - application/json
  *     parameters:

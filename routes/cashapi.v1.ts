@@ -17,7 +17,7 @@ export const cashApiV1: Router = Router();
  *                  This is to be executed only once per machine and
  *                  the returned device UUID can be stored and used for all subsequent requests.
  *     tags:
- *       - Cash API
+ *       - Cash-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -65,7 +65,7 @@ cashApiV1.post("/devices", function (request: Request, response: Response, next:
  *     description: Checks the given token radio access code for validity and if a valid and open token
  *                  was found for the given code, it is returned and locked in a single atomic operation.
  *     tags:
- *       - Cash API
+ *       - Cash-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -130,7 +130,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *                  (will be part of the clearing information).
  *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional).
  *     tags:
- *       - Cash API
+ *       - Cash-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -198,7 +198,7 @@ cashApiV1.put("/tokens/:uid", function (request: Request, response: Response, ne
  *                  the QR-code or receive the NFC data and securely verify and push a locked token onto the ATM via the Mobile API.
  *                  
  *     tags:
- *       - Cash API
+ *       - Cash-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -257,7 +257,7 @@ cashApiV1.post("/trigger", function (request: Request, response: Response, next:
  *                  radiocode method.
  *                  
  *     tags:
- *       - Cash API
+ *       - Cash-API
  *     produces:
  *       - application/json
  *     parameters:

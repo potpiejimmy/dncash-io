@@ -19,7 +19,7 @@ export const mobileApiV1: Router = Router();
  *                  private key so that the radio code alone can not be used on other cash devices if it is intercepted.
  *
  *     tags:
- *       - Mobile API
+ *       - Mobile-API
  *     produces:
  *       - application/json
  *     parameters:

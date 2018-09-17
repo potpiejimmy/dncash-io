@@ -9,15 +9,15 @@ export const tokenApiV1: Router = Router();
  * 
  * @swagger
  * tags:
- *   - name: Token API
+ *   - name: Token-API
  *     description: The Token API provides secure operations invoked by authorized entities
  *                  such as banking backends or secure personal wallets.
- *   - name: Cash API
+ *   - name: Cash-API
  *     description: The Cash API is used by secure cash devices such as ATMs and cash registers.
- *   - name: Mobile API
+ *   - name: Mobile-API
  *     description: The Mobile API holds secure operations that can be directly executed from
  *                  mobile devices.
- *   - name: Clearing API
+ *   - name: Clearing-API
  *     description: The Clearing API provides access to account clearing information to be
  *                  used for settlement processes.
  * 
@@ -207,7 +207,7 @@ export const tokenApiV1: Router = Router();
  *                  the target device (usually banking backends performing account authorization prior
  *                  to calling the create method).
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -251,7 +251,7 @@ tokenApiV1.post("/devices", function (request: Request, response: Response, next
  *     summary: Gets registered devices
  *     description: Returns the list of registered devices for the authenticated user.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -290,7 +290,7 @@ tokenApiV1.get("/devices", function (request: Request, response: Response, next:
  *     summary: Gets a single registered device
  *     description: Returns the device data for the given device UUID
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -347,7 +347,7 @@ tokenApiV1.get("/devices/:uid", function (request: Request, response: Response, 
  *                  The info field is an arbitrary JSON object that may contain the denomData array as shown (to specify a desired
  *                  note selection) and any number of additional custom data fields to be stored along with the token.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -392,7 +392,7 @@ tokenApiV1.post("/tokens", function (request: Request, response: Response, next:
  *                  If the query parameter ?device_uuid=... is specified, only tokens in state OPEN for that device are returned.
  *                  Otherwise, additional query parameters such as 'state' and/or 'clearstate' may be used to filter the result set accordingly.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -450,7 +450,7 @@ tokenApiV1.get("/tokens", function (request: Request, response: Response, next: 
  *     summary: Gets a single cash token
  *     description: Returns the cash token with the given UUID
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -499,7 +499,7 @@ tokenApiV1.get("/tokens/:uid", function (request: Request, response: Response, n
  *                  Note that you must also specify the corresponding device_uuid as a query parameter (for security reasons).
  *                  A token can only be deleted if it is still in OPEN state.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
@@ -553,7 +553,7 @@ tokenApiV1.delete("/tokens/:uid", function (request: Request, response: Response
  *                  the clearing and/or settling information of a token. Currently, only updating
  *                  of the fields 'clearstate' and/or 'info' is allowed.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:

@@ -17,7 +17,7 @@ export const tokenApiV1Ws: Router = Router();
  *                  The token change endpoint immediately notifies the listener about token state changes. Note that only the token UUID
  *                  is reported on this interface for performance and security reasons.
  *     tags:
- *       - Token API
+ *       - Token-API
  *     produces:
  *       - application/json
  *     parameters:
