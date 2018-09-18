@@ -214,7 +214,7 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
 
     // look up the token to find the associated token device
     return cleanUpExpired().then(() => (codetype === "long" ? findByUUID(token_id) : findByPlainCode(token_id)).then(token => {
-        if (!token) throw "Token not found";
+        if (!token) throw "Token not found: " + token_id;
 
         // fetch the token device with its associated public key:
         return Device.findById(token.owner_device_id).then(tokenDevice => {
@@ -225,8 +225,9 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
             if (signedData) {
                 if (!signedData.verify(tokenDevice.pubkey)) {
                     // REJECT token, allow no retries
-                    return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
-                        throw "Invalid signature.";
+                    let reject_reason = "Invalid signature";
+                    return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED", reject_reason).then(t => {
+                        throw reject_reason;
                     });
                 }
             }
@@ -234,8 +235,9 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
             // check the secure code
             if (token.secure_code != encryptTokenCode(tokenDevice.pubkey, code)) {
                 // REJECT token, allow no retries
-                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
-                    throw "Invalid token code.";
+                let reject_reason = "Invalid token code";
+                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED", reject_reason).then(t => {
+                    throw reject_reason;
                 });
             }
 
@@ -246,8 +248,9 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
                 // Apply sophisticated rules here in the future allowing
                 // for cross-customer-clearing.
                 // For now, segregate all customers
-                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED").then(t => {
-                    throw "Foreign token rejected";
+                let reject_reason = "Foreign token rejected";
+                return atomicLockAndReturn(cashDevice, token, "reject", "REJECTED", reject_reason).then(t => {
+                    throw reject_reason;
                 });
             }
 
@@ -257,13 +260,14 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
     }));
 }
 
-function atomicLockAndReturn(cashDevice: any, token: any, action: string, state: string): Promise<any> {
+function atomicLockAndReturn(cashDevice: any, token: any, action: string, state: string, reject_reason?: any): Promise<any> {
     return atomicLockTokenDB(token.id, cashDevice.id, state).then(success => {
         if (!success) throw "Token not in OPEN state.";
         changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: token.uuid});
         if (token.owner_id != cashDevice.customer_id) changeNotifier.notifyObservers("token:"+cashDevice.customer_id, {uuid: token.uuid});
         // re-read and export:
         return findById(token.id).then(t => {
+            if (reject_reason) t.reject_reason = reject_reason;
             journalizeToken(token.owner_id, "token", action, t);
             if (token.owner_id != cashDevice.customer_id) journalizeToken(cashDevice.customer_id, "token", action, t);
             return exportToken(t)
