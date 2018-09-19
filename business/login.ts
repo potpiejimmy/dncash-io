@@ -79,19 +79,19 @@ export function changePassword(user: any, oldPassword: string, newPassword: stri
 export function login(email: string, password: string, twofatoken: string, skip2fa: boolean = false): Promise<any> {
     return findUserByEmail(email).then(user => {
         if (user && crypto.createHash('sha256').update(password || '').digest("hex") == user.password) {
-            delete badLogins[email];
             if (user.twofasecret && !skip2fa) {
                 // if 2FA is enabled, check the token:
                 if (!twofatoken) return {"twofa": "Need 2FA token."};
                 try {
                     verify2FAToken(user.twofasecret, twofatoken);
                 } catch (err) {
-                    return {"result": "Sorry, the token was incorrect."};
+                    return handleBadLogins(email, "Sorry, the token was incorrect.");
                 }
             }
+            delete badLogins[email];
             return authenticate(user);
         } else {
-            return handleBadLogins(email);
+            return handleBadLogins(email, "Sorry, wrong user or password.");
         }
     });        
 }
@@ -119,7 +119,7 @@ export function updateUser(admin: any, email: string, updateData: any): Promise<
     return db.querySingle(dbstmt, dbparams);
 }
 
-function handleBadLogins(email: string): Promise<any> {
+function handleBadLogins(email: string, info: string): Promise<any> {
     Object.keys(badLogins).forEach(k => {
         if (Date.now() - badLogins[k].lastUsed > 24*60*60*1000) delete badLogins[k];
     });
@@ -131,7 +131,7 @@ function handleBadLogins(email: string): Promise<any> {
     badLogin.count++;
     badLogin.lastUsed = Date.now();
     return new Promise<any>(resolve => setTimeout(() => 
-        resolve({"result": "Sorry, wrong user or password."}),
+        resolve({"result": info}),
         (Math.pow(2,badLogin.count-1)-1) * 1000)
     );
 }
