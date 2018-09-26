@@ -1068,12 +1068,13 @@ describe("cashapi.v1:", () => {
             .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
             .set("DN-API-KEY", cashApiKey)
             .set("DN-API-SECRET", cashApiSecret)
-            .send({state:'COMPLETED',lockrefname:'cashref1234'})
+            .send({state:'COMPLETED',lockrefname:'cashref1234',processing_info:{cashresult:"OK"}})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
                 res.body.should.have.property('state');
                 res.body.state.should.be.eql('COMPLETED');
+                res.body.processing_info.cashresult.should.be.eql('OK');
                 done();
             });
         });

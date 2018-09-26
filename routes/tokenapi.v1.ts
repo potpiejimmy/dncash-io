@@ -151,6 +151,9 @@ export const tokenApiV1: Router = Router();
  *          type: number
  *          description: actual amount dispensed or deposited in smallest symbol units (cents)
  *          example: 9750
+ *        processing_info:
+ *          type: object
+ *          description: arbitrary JSON data holding processing information
  *   token_update:
  *      type: object
  *      properties:
@@ -191,6 +194,9 @@ export const tokenApiV1: Router = Router();
  *          example: OPEN
  *        info:
  *          $ref: '#/definitions/token_info'
+ *        processing_info:
+ *          type: object
+ *          description: arbitrary JSON processing data set by server or by cash processing side
  */
 
 // ------- device ---------------------

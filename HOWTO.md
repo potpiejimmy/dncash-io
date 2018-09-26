@@ -1,7 +1,8 @@
 Each customer that registers with dncash-io typically uses one or more of the following APIs:
-1. __Token API__: The Token API provides secure operations invoked by authorized entities such as banking backends or secure personal wallets. A bank may use the Token API to create pre-authorized cash value tokens for registered end-user devices (smartphones) on behalf of their customers that can later be redeemed at a cash point or an ATM.
-2. __Cash API__: The Cash API is used by secure cash devices such as ATMs and cash registers. It provides methods to verify, lock and confirm cash tokens with the service.
-3. __Clearing API__: The Clearing API provides access to account clearing information to be used for settlement processes.
+1. [__Token API__](#Token-API): The Token API provides secure operations invoked by authorized entities such as banking backends or secure personal wallets. A bank may use the Token API to create pre-authorized cash value tokens for registered end-user devices (smartphones) on behalf of their customers that can later be redeemed at a cash point or an ATM.
+2. [__Cash API__](#Cash-API): The Cash API is used by secure cash devices such as ATMs and cash registers. It provides methods to verify, lock and confirm cash tokens with the service.
+3. [__Mobile API__](#Mobile-API): The Mobile API is used directly by consumer devices to trigger cashout operations at a cash-point.
+4. [__Clearing API__](#Clearing-API): The Clearing API provides access to account clearing information to be used for settlement processes.
 
 ## Typical usage scenario, step-by-step
 
@@ -117,7 +118,7 @@ In all of the above modes, the claimed cash tokens will be atomically verified a
 
 ### 7. Confirm tokens from cash devices
 
-After a token has been successfully claimed by a cash device, the cashout or cashin process is performed and the cash device notifies dncash-io about the result of the cash process. In the confirmation call, the token state can be updated only from state LOCKED to one of COMPLETED (completed normally, amount to be settled/marked for clearing), FAILED (technical failure), CANCELED (operation canceled by the user), REJECTED (process rejected or aborted by the system), RETRACTED (dispensed money retracted). Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference (will be part of the clearing information later). In addition, the amount can be updated to the actual deposit or dispense amount (optional)
+After a token has been successfully claimed by a cash device, the cashout or cashin process is performed and the cash device notifies dncash-io about the result of the cash process. In the confirmation call, the token state can be updated only from state LOCKED to one of COMPLETED (completed normally, amount to be settled/marked for clearing), FAILED (technical failure), CANCELED (operation canceled by the user), REJECTED (process rejected or aborted by the system), RETRACTED (dispensed money retracted). Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference (will be part of the clearing information later). In addition, the amount can be updated to the actual deposit or dispense amount (optional). Furthermore, you may optionally specify arbitrary JSON data to update the token's processing_info field for journalization.
 
 ### 8. Live token update on Token API
 

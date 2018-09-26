@@ -156,12 +156,12 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             // make sure the updater is the same as the locker
             if (token.lock_device_id != cashDevice.id) throw "Sorry, token was locked by another device";
             
-            // right now, we only support updating of the state and/or amount
+            // we only support updating of the fields state, amount and processing_info
             if (!(['COMPLETED','CANCELED','FAILED','REJECTED','RETRACTED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED, REJECTED, RETRACTED allowed.";
             if (!newData.amount) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 
-            return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount).then(success => {
+            return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount, newData.processing_info).then(success => {
                 if (!success) throw "Token not in LOCKED state.";
                 changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: uid});
                 if (token.owner_id != customer.id) changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
@@ -267,7 +267,7 @@ function atomicLockAndReturn(cashDevice: any, token: any, action: string, state:
         if (token.owner_id != cashDevice.customer_id) changeNotifier.notifyObservers("token:"+cashDevice.customer_id, {uuid: token.uuid});
         // re-read and export:
         return findById(token.id).then(t => {
-            if (reject_reason) t.reject_reason = reject_reason;
+            if (reject_reason) t.processing_info = JSON.stringify({ reject_reason: reject_reason });
             journalizeToken(token.owner_id, "token", action, t);
             if (token.owner_id != cashDevice.customer_id) journalizeToken(cashDevice.customer_id, "token", action, t);
             return exportToken(t)
@@ -314,6 +314,7 @@ function exportToken(token: any): any {
     delete token.owner_device_id;
     delete token.lock_device_id;
     token.info = JSON.parse(token.info);
+    token.processing_info = JSON.parse(token.processing_info);
     return token;
 }
 
@@ -337,8 +338,8 @@ function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Pro
     return db.querySingle("update token set state=?,lock_device_id=?,updated=?,plain_code=null,secure_code='' where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
-function confirmLockedToken(id: number, newState: string, lockrefname: string, newAmount: number): Promise<boolean> {
-    return db.querySingle("update token set state=?,lockrefname=?,amount=?,updated=? where id=? and state='LOCKED'", [newState,lockrefname,newAmount,new Date(),id]).then(res => res.affectedRows);
+function confirmLockedToken(id: number, newState: string, lockrefname: string, newAmount: number, processingInfo: any): Promise<boolean> {
+    return db.querySingle("update token set state=?,lockrefname=?,amount=?,processing_info=?,updated=? where id=? and state='LOCKED'", [newState,lockrefname,newAmount,JSON.stringify(processingInfo),new Date(),id]).then(res => res.affectedRows);
 }
 
 function updateToken(uid: string, newFields: any): Promise<boolean> {
@@ -362,5 +363,6 @@ function journalizeToken(customer_id: number, entity: string, action: string, to
     delete jtoken.plain_code;
     delete jtoken.secure_code;
     jtoken.info = JSON.parse(jtoken.info);
+    jtoken.processing_info = JSON.parse(jtoken.processing_info);
     Journal.journalize(customer_id, entity, action, jtoken);
 }

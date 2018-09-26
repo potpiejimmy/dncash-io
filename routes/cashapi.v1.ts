@@ -129,6 +129,7 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *                  Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference
  *                  (will be part of the clearing information).
  *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional).
+ *                  Furthermore, you may optionally specify arbitrary JSON data to update the token's processing_info field.
  *     tags:
  *       - Cash-API
  *     produces:
