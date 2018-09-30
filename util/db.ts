@@ -67,3 +67,58 @@ export function querySingle(stmt: string, params: any[] = []) : Promise<any> {
         throw err;
     }));
 }
+
+/**
+ * Begins a new user transaction on the given connection.
+ * @param connection a connection
+ */
+export function beginTransaction(connection: IConnection): Promise<any> {
+    return new Promise((resolve, reject) => {
+        connection.beginTransaction(err => {
+            if (err) { console.info(err); reject(err); }
+            else resolve();
+        });
+    })
+}
+
+/**
+ * Commits a user transaction on the given connection.
+ * @param connection a connection
+ */
+export function commit(connection: IConnection): Promise<any> {
+    return new Promise((resolve, reject) => {
+        connection.commit(err => {
+            if (err) { console.info(err); reject(err); }
+            else resolve();
+        });
+    });
+}
+
+/**
+ * Rolls back a user transaction on the given connection.
+ * @param connection a connection
+ */
+export function rollback(connection: IConnection): Promise<any> {
+    return new Promise(resolve => {
+        connection.rollback(() => resolve());
+    });
+}
+
+/**
+ * Opens a new database connection with an associated transaction. Queries on the
+ * connection object will be all contained in a single transaction and 
+ * committed or rolled back automatically depending on the result of the passed in promise.
+ * @param performer database performer
+ */
+export function withTransaction(performer: (IConnection) => Promise<any>): Promise<void> {
+    return connection().then(connection =>
+        beginTransaction(connection)
+        .then(() => performer(connection))
+        .then(() => commit(connection))
+        .then(() => connection.release())
+        .catch(err => rollback(connection).then(() => {
+            connection.release()
+            throw err;
+        }))
+    );
+}
