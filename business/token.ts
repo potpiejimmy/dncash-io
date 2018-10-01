@@ -149,7 +149,8 @@ export function verifyAndLockByTrigger(device_id: number, radio_code: string, si
 }
 
 export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, uid: string, newData: any): Promise<any> {
-    return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
+    return Param.readParam(customer.id, "PARTIAL_CASHOUTS").then(partialCashoutsEnabled => 
+           Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
         if (!cashDevice) throw "Cash device with UUID " + device_uuid + " not found.";
         return findByUUID(uid).then(token => {
             if (!token) throw "Token not found";
@@ -161,8 +162,13 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             if (!newData.amount) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 
-            return confirmLockedToken(token.id, newData.state, newData.lockrefname, newData.amount, newData.processing_info).then(success => {
-                if (!success) throw "Token not in LOCKED state.";
+            return db.withTransaction(dbCon =>
+                confirmLockedToken(dbCon, token.id, newData.state, newData.lockrefname, newData.amount, newData.processing_info).then(success => {
+                    if (!success) throw "Token not in LOCKED state.";
+                    if (partialCashoutsEnabled) {
+                        // XXX todo handle partial cashouts in DB transaction
+                    }
+            })).then(() => {
                 changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: uid});
                 if (token.owner_id != customer.id) changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
                 // re-read and export:
@@ -174,7 +180,7 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
                 });
             });
         });        
-    });
+    }));
 }
 
 function clearToken(token: any, cash_customer_id: number): Promise<void> {
@@ -270,7 +276,9 @@ function atomicLockAndReturn(cashDevice: any, token: any, action: string, state:
             if (reject_reason) t.processing_info = JSON.stringify({ reject_reason: reject_reason });
             journalizeToken(token.owner_id, "token", action, t);
             if (token.owner_id != cashDevice.customer_id) journalizeToken(cashDevice.customer_id, "token", action, t);
-            return exportToken(t)
+            delete t.plain_code;
+            delete t.secure_code;
+            return exportToken(t);
         });
     });
 }
@@ -335,11 +343,19 @@ function findByPlainCode(plainCode: string): Promise<any> {
 }
 
 function atomicLockTokenDB(id: number, cashDeviceId: number, state: string): Promise<boolean> {
-    return db.querySingle("update token set state=?,lock_device_id=?,updated=?,plain_code=null,secure_code='' where id=? and state='OPEN'", [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
+    let stmt = "update token set state=?,lock_device_id=?,updated=?";
+    if (state !== 'LOCKED') {
+        // Note: if going to LOCKED state, keep the plain and secure code until confirmed
+        // (allows for re-using for partial cashouts / payments)
+        stmt += ",plain_code=null,secure_code=''";
+    }
+    stmt += " where id=? and state='OPEN'";
+    return db.querySingle(stmt, [state,cashDeviceId,new Date(),id]).then(res => res.affectedRows);
 }
 
-function confirmLockedToken(id: number, newState: string, lockrefname: string, newAmount: number, processingInfo: any): Promise<boolean> {
-    return db.querySingle("update token set state=?,lockrefname=?,amount=?,processing_info=?,updated=? where id=? and state='LOCKED'", [newState,lockrefname,newAmount,JSON.stringify(processingInfo),new Date(),id]).then(res => res.affectedRows);
+function confirmLockedToken(dbCon: any, id: number, newState: string, lockrefname: string, newAmount: number, processingInfo: any): Promise<boolean> {
+    let stmt = "update token set state=?,lockrefname=?,amount=?,processing_info=?,plain_code=null,secure_code='',updated=? where id=? and state='LOCKED'";
+    return db.query(dbCon, stmt, [newState,lockrefname,newAmount,JSON.stringify(processingInfo),new Date(),id]).then(res => res.affectedRows);
 }
 
 function updateToken(uid: string, newFields: any): Promise<boolean> {
