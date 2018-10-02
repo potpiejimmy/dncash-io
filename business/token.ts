@@ -159,15 +159,25 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             
             // we only support updating of the fields state, amount and processing_info
             if (!(['COMPLETED','CANCELED','FAILED','REJECTED','RETRACTED'].includes(newData.state))) throw "Update token state: only values COMPLETED, CANCELED, FAILED, REJECTED, RETRACTED allowed.";
-            if (!newData.amount) newData.amount = token.amount;
+            if (newData.amount === undefined) newData.amount = token.amount;
             if (token.type=='CASHOUT' && newData.amount > token.amount) throw "Illegal amount increase for dispense token.";
 
+            // open a DB transaction so the following is an atomic operation
             return db.withTransaction(dbCon =>
+                // confirming the token not only updates its state (and some additional fields like amount, lockrefname etc.),
+                // it also clears out the token's plain code (and secret code) to be re-used by other tokens.
                 confirmLockedToken(dbCon, token.id, newData.state, newData.lockrefname, newData.amount, newData.processing_info).then(success => {
                     if (!success) throw "Token not in LOCKED state.";
                     if (partialCashoutsEnabled) {
-                        // XXX todo handle partial cashouts in DB transaction
+                        // partial cashouts: if the new (actual) amount of the cashout (or payment) operation
+                        // is LOWER than the pre-authorized amount of the CASHOUT token, a new token is
+                        // immediately created for the remaining amount using the SAME plain and secret code
+                        // (the latter allows for barcodes to stay the same over a period of multiple cashouts/payments)
+                        if (newData.amount < token.amount) {
+                            return createTokenPartialCashout(dbCon, token, token.amount - newData.amount);
+                        }
                     }
+            // end of DB transaction
             })).then(() => {
                 changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: uid});
                 if (token.owner_id != customer.id) changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
@@ -181,6 +191,25 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
             });
         });        
     }));
+}
+
+function createTokenPartialCashout(dbCon: any, origToken: any, amount: number) {
+    let token = JSON.parse(JSON.stringify(origToken));
+    delete token.id;
+    delete token.state;
+    delete token.lock_device_id;
+    delete token.lockrefname;
+    delete token.created;
+    delete token.updated;
+    token.uuid = uuid();
+    token.amount = amount;
+    token.info = JSON.stringify({
+        partial_from_uuid: origToken.uuid
+    });
+    return insertNew(token, dbCon).then(id => findById(id, dbCon)).then(t => {
+        changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: token.uuid});
+        journalizeToken(token.owner_id, "token", "create", t);
+    });
 }
 
 function clearToken(token: any, cash_customer_id: number): Promise<void> {
@@ -326,12 +355,26 @@ function exportToken(token: any): any {
     return token;
 }
 
-function insertNew(token: any): Promise<number> {
-    return db.querySingle("insert into token set ?", [token]).then(res => res.insertId);
+function insertNew(token: any, dbCon?: any): Promise<number> {
+    let result;
+    let stmt = "insert into token set ?";
+    let params = [token];
+    if (dbCon)
+        result = db.query(dbCon, stmt, params);
+    else 
+        result = db.querySingle(stmt, params);
+    return result.then(res => res.insertId);
 }
 
-function findById(id: number): Promise<any> {
-    return db.querySingle("select * from token where id=?", [id]).then(res => res[0]);
+function findById(id: number, dbCon?: any): Promise<any> {
+    let result;
+    let stmt = "select * from token where id=?";
+    let params = [id];
+    if (dbCon)
+        result = db.query(dbCon, stmt, params);
+    else 
+        result = db.querySingle(stmt, params);
+    return result.then(res => res[0]);
 }
 
 function findByUUID(uid: string): Promise<any> {

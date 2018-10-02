@@ -27,6 +27,7 @@ let atmUid2;
 let radioCodeOut1;
 let radioCodeOut2;
 let radioCodeOutPlain;
+let radioCodeOutPlainPartialCashouts;
 let radioCodeIn1;
 let radioCodeIn2;
 let tokenUid;
@@ -521,7 +522,20 @@ describe("admin.v1:", () => {
             chai.request(app)
             .put("/dnapi/admin/v1/params/USE_PLAIN_CODES")
             .set("authorization", "Bearer "+sessionToken)
-            .send("\"false\"")
+            .send("\"true\"")
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+        });
+    });
+
+    describe("Set a parameter 'PARTIAL_CASHOUTS' (ok) | PUT /params/PARTIAL_CASHOUTS", () => {
+        it("should return HTTP 200 ok", done => {
+            chai.request(app)
+            .put("/dnapi/admin/v1/params/PARTIAL_CASHOUTS")
+            .set("authorization", "Bearer "+sessionToken)
+            .send("\"true\"")
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
@@ -789,7 +803,7 @@ describe("tokenapi.v1:", () => {
             .post("/dnapi/token/v1/tokens")
             .set("DN-API-KEY", tokenApiKey)
             .set("DN-API-SECRET", tokenApiSecret)
-            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234', info: {denomData:[{denom:1000,count:5},{denom:5000,count:1}], customKey:"customValue"}})
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', info: {denomData:[{denom:1000,count:5},{denom:5000,count:1}], customKey:"customValue"}})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -815,7 +829,7 @@ describe("tokenapi.v1:", () => {
             .post("/dnapi/token/v1/tokens")
             .set("DN-API-KEY", tokenApiKey)
             .set("DN-API-SECRET", tokenApiSecret)
-            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR', refname: 'custref1234'})
+            .send({device_uuid:mobileUid, amount:1000, symbol: 'EUR'})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
@@ -843,6 +857,27 @@ describe("tokenapi.v1:", () => {
                 chai.should().exist(res.body.plain_code);
                 chai.should().exist(res.body.secure_code);
                 radioCodeOutPlain = res.body.plain_code + crypto.privateDecrypt({
+                    key: keypair.private,
+                    padding: constants.RSA_PKCS1_PADDING
+                }, new Buffer(res.body.secure_code, 'base64')).toString();
+                done();
+            });
+        });
+    });
+
+    describe("Create CASHOUT token 4 with plain code for partial cashouts 100 EUR (ok) | POST /tokens", () => {
+        it("should create new token of type CASHOUT", done => {
+            chai.request(app)
+            .post("/dnapi/token/v1/tokens")
+            .set("DN-API-KEY", tokenApiKey)
+            .set("DN-API-SECRET", tokenApiSecret)
+            .send({device_uuid:mobileUid, amount:10000, symbol: 'EUR', refname: 'partial_payment_1234'})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                chai.should().exist(res.body.plain_code);
+                chai.should().exist(res.body.secure_code);
+                radioCodeOutPlainPartialCashouts = res.body.plain_code + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
                 }, new Buffer(res.body.secure_code, 'base64')).toString();
@@ -905,7 +940,7 @@ describe("tokenapi.v1:", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(5);
+                res.body.length.should.be.eql(6);
                 done();
             });
         });
@@ -1097,6 +1132,136 @@ describe("cashapi.v1:", () => {
         });
     });
 
+    // Partial Cashouts:
+
+    describe("Claim token 4 with plain code for partial cashout/payment (ok) | /tokens/:radiocode", () => {
+        it("should verify and lock token", done => {
+            chai.request(app)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOutPlainPartialCashouts+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('LOCKED');
+                res.body.should.have.property('uuid');
+                tokenUid = res.body.uuid;
+                done();
+            });
+        });
+    });
+
+    describe("Confirm token 4 with partial cashout 79 of 100 EUR (ok) | PUT /tokens/:uuid with amount", () => {
+        it("should confirm token", done => {
+            chai.request(app)
+            .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .send({state:'COMPLETED',lockrefname:'posref1234',amount:7900})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('COMPLETED');
+                done();
+            });
+        });
+    });
+
+    describe("Claim token 4 again for second payment (ok) | /tokens/:radiocode", () => {
+        it("should verify, lock and return token for remaining amount of 21 EUR", done => {
+            chai.request(app)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOutPlainPartialCashouts+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('LOCKED');
+                res.body.should.have.property('uuid');
+                res.body.should.have.property('amount');
+                res.body.amount.should.be.eql(2100);
+                tokenUid = res.body.uuid;
+                done();
+            });
+        });
+    });
+
+    describe("Confirm token 4 with an amount higher than the remaining amount (fail) | PUT /tokens/:uuid with amount", () => {
+        it("should fail with message 'Illegal amount increase'", done => {
+            chai.request(app)
+            .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .send({state:'COMPLETED',lockrefname:'posref1234',amount:7900})
+            .end((err, res) => {
+                res.should.have.status(500);
+                res.body.should.be.a('object');
+                res.body.should.have.property('message');
+                res.body.message.should.contain('Illegal amount increase');
+                done();
+            });
+        });
+    });
+
+    describe("Confirm token 4 with cancellation for amount 0 | PUT /tokens/:uuid with amount", () => {
+        it("should cancel token, spawn a new one for 21 EUR", done => {
+            chai.request(app)
+            .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .send({state:'CANCELED',lockrefname:'posref1234',amount:0})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('CANCELED');
+                done();
+            });
+        });
+    });
+
+    describe("Claim token 4 again for third payment (ok) | /tokens/:radiocode", () => {
+        it("should verify, lock and return token for remaining amount of 21 EUR", done => {
+            chai.request(app)
+            .get("/dnapi/cash/v1/tokens/"+radioCodeOutPlainPartialCashouts+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('LOCKED');
+                res.body.should.have.property('uuid');
+                res.body.should.have.property('amount');
+                res.body.amount.should.be.eql(2100);
+                tokenUid = res.body.uuid;
+                done();
+            });
+        });
+    });
+
+    describe("Confirm token 4 as fully completed | PUT /tokens/:uuid with amount", () => {
+        it("should confirm token, not spawn a new one", done => {
+            chai.request(app)
+            .put("/dnapi/cash/v1/tokens/"+tokenUid+"?device_uuid="+atmUid1)
+            .set("DN-API-KEY", cashApiKey)
+            .set("DN-API-SECRET", cashApiSecret)
+            .send({state:'COMPLETED',lockrefname:'posref1234',amount:2100})
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.be.a('object');
+                res.body.should.have.property('state');
+                res.body.state.should.be.eql('COMPLETED');
+                done();
+            });
+        });
+    });
+
+    // Triggering mechanism:
+
     describe("Create trigger code (ok) | POST /trigger", () => {
         it("should create new trigger code", done => {
             chai.request(app)
@@ -1252,7 +1417,7 @@ describe("tokenapi.v1 (continue):", () => {
     });
 
     describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
-        it("should return four remaining tokens with clearstate 0", done => {
+        it("should return seven remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -1260,7 +1425,7 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(4);
+                res.body.length.should.be.eql(7);
                 res.body[0].should.have.property('clearstate');
                 res.body[0].clearstate.should.be.eql(0);
                 res.body[0].should.have.property('uuid');
@@ -1291,7 +1456,7 @@ describe("tokenapi.v1 (continue):", () => {
     });
 
     describe("Read filtered tokens, clearstate 0 (ok) | GET /tokens?clearstate=0", () => {
-        it("should return three remaining tokens with clearstate 0", done => {
+        it("should return six remaining tokens with clearstate 0", done => {
             chai.request(app)
             .get("/dnapi/token/v1/tokens?clearstate=0")
             .set("DN-API-KEY", tokenApiKey)
@@ -1299,7 +1464,7 @@ describe("tokenapi.v1 (continue):", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(3);
+                res.body.length.should.be.eql(6);
                 res.body[0].should.have.property('clearstate');
                 res.body[0].clearstate.should.be.eql(0);
                 res.body[0].should.have.property('uuid');
@@ -1337,7 +1502,7 @@ describe("clearingapi.v1:", () => {
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('array');
-                res.body.length.should.be.eql(1);
+                res.body.length.should.be.gt(1);
                 res.body[0].should.have.property('uuid');
                 res.body[0].should.have.property('refname');
                 res.body[0].refname.should.be.eql('custref1234');

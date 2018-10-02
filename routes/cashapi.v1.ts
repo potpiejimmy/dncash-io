@@ -123,12 +123,16 @@ cashApiV1.get("/tokens/:radiocode", function (request: Request, response: Respon
  *                  The token state may be updated only from state LOCKED to one of
  *                  COMPLETED (completed normally, amount to be settled),
  *                  FAILED (technical failure),
- *                  CANCELED (operation canceled by the user),
+ *                  CANCELED (operation canceled by the user or merchant),
  *                  REJECTED (process rejected or aborted by the system),
  *                  RETRACTED (dispensed money retracted).
  *                  Also, the field lockrefname can be updated, for instance to hold a custom cash-side transaction reference
  *                  (will be part of the clearing information).
- *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional).
+ *                  In addition, the amount can be updated to the actual deposit or dispense amount (optional). If, for a
+ *                  CASHOUT token, the amount is specified and it is less than the token amount, the token completion
+ *                  amount and clearing data is set to the specified amount. If partial cashouts are enabled, a new
+ *                  open CASHOUT token is automatically spawned for the remaining amount inheriting the original's token
+ *                  plain and secure codes.
  *                  Furthermore, you may optionally specify arbitrary JSON data to update the token's processing_info field.
  *     tags:
  *       - Cash-API
