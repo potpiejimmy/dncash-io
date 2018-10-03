@@ -203,6 +203,7 @@ function createTokenPartialCashout(dbCon: any, origToken: any, amount: number) {
     delete token.updated;
     token.uuid = uuid();
     token.amount = amount;
+    if (origToken.expires) token.expires = new Date(origToken.expires);
     token.info = JSON.stringify({
         partial_from_uuid: origToken.uuid
     });

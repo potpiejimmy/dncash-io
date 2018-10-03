@@ -871,7 +871,7 @@ describe("tokenapi.v1:", () => {
             .post("/dnapi/token/v1/tokens")
             .set("DN-API-KEY", tokenApiKey)
             .set("DN-API-SECRET", tokenApiSecret)
-            .send({device_uuid:mobileUid, amount:10000, symbol: 'EUR', refname: 'partial_payment_1234'})
+            .send({device_uuid:mobileUid, amount:10000, symbol: 'EUR', refname: 'partial_payment_1234', expires:Date.now()+60000})
             .end((err, res) => {
                 res.should.have.status(200);
                 res.body.should.be.a('object');
