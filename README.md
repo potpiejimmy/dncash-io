@@ -86,7 +86,7 @@ To deploy to an Elastic Beanstalk instance from the command line, install the AW
 
 This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets and SSL support. Increase the load balancer's Idle Timeout attribute to a higher value to avoid closing websockets every 60 seconds (you can do that in the AWS web console).
 
-In the AWS console, create a database in the EB environment configuration (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+In AWS RDS, create a new database (mysql-5.6 is fine), open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
     mysql -h aws-rds-endpoint-host ...
 

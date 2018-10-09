@@ -35,7 +35,7 @@ export const tokenApiV1: Router = Router();
  *          type: string
  *          description: PEM encoded public key
  *          required: true
- *          example: -----BEGIN RSA PUBLIC KEY-----↵MIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ.....
+ *          example: "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ....."
  *        refname:
  *          type: string
  *          description: optional custom reference name

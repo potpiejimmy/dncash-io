@@ -17,7 +17,7 @@ When a pre-authorized token is created by the bank on behalf of a bank customer,
 Using the bank's Token API credentials, the bank sends the device's public key along with an optional custom reference name (and optional additional data in the info field) as shown below:
 
     {
-      "pubkey": "-----BEGIN RSA PUBLIC KEY-----↵MIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ.....",
+      "pubkey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA6gsDEQ6Z188fEKzA1xVoQ.....",
       "refname": "Device reference name",
       "info": {
         "anyKey": "anyValue"
