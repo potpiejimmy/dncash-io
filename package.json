@@ -1,6 +1,6 @@
 {
   "name": "dncash-io",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "dncash.io core API service",
   "main": "app.ts",
   "scripts": {
