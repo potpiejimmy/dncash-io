@@ -1,4 +1,5 @@
 export const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+export const JWT_VALID_HOURS = parseInt(process.env.JWT_VALID_HOURS) || 168; // JWT validity in hours until requiring user to log in again (UI), default 7 days
 export const API_SCOPES = ["token-api", "cash-api", "clearing-api"];
 export const USE_PLAIN_CODES = false; // lower security if using short plain codes
 export const DEFAULT_PLAIN_CODE_LEN = 6; // no. of decimal digits for the unique plain code (used for EAN retail codes)
