@@ -1,5 +1,6 @@
 import * as uuid from "uuid/v4"; // Random-based UUID
 import * as Device from "./device";
+import * as Param from './param';
 import * as Token from "./token";
 import * as redis from '../util/redis';
 import * as mqtt from '../util/mqtt';
@@ -47,11 +48,12 @@ function cleanUp() {
 export function createTrigger(customer: any, device_uuid: string, expiresIn: number = config.TRIGGER_CODE_VALIDITY_SECONDS): Promise<any> {
     cleanUp();
 
-    return Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
+    return Param.readParam(customer.id, "USE_FIXED_TRIGGER_CODES").then(USE_FIXED_TRIGGER_CODES => 
+           Device.findByCustomerAndUUID(customer, device_uuid).then(cashDevice => {
         if (!cashDevice) throw "Sorry, device with UUID " + device_uuid + " not found.";
 
         // create a new unique id
-        let triggercode = uuid();
+        let triggercode = config.USE_FIXED_TRIGGER_CODES || USE_FIXED_TRIGGER_CODES ? device_uuid : uuid();
         let trigger = {
             expires: Date.now() + expiresIn * 1000,
             cashDeviceId: cashDevice.id
@@ -69,7 +71,7 @@ export function createTrigger(customer: any, device_uuid: string, expiresIn: num
 
         // return the new trigger code
         return response.then(() => result);
-    });
+    }));
 }
 
 export function registerTrigger(customer: any, triggercode: string, tokenReceiver: any): Promise<TriggerEntry> {
