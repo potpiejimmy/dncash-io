@@ -3,6 +3,8 @@ branch-defaults:
     environment: dncash-io-dev
   master:
     environment: dncash-io-dev
+  symbioticon:
+    environment: dncash-io-symbioticon
 global:
   application_name: dncash-io
   branch: null
