@@ -88,8 +88,8 @@ export function registerTrigger(customer: any, triggercode: string, tokenReceive
 export function notifyTrigger(triggercode: string, radiocode: string, signature: string): Promise<any> {
     return getTrigger(triggercode).then(trigger => {
         if (!trigger) return Promise.reject("Trigger " + triggercode + " not found.");
-        if (redis.isEnabled()) redis.deleteValue(redisTriggerMap, triggercode);
         return Token.verifyAndLockByTrigger(trigger.cashDeviceId, radiocode, new SignedStringData(triggercode + radiocode, signature)).then(t => {
+            if (redis.isEnabled()) redis.deleteValue(redisTriggerMap, triggercode);
             // send the token out
             sendToken(triggercode, t);
         });
