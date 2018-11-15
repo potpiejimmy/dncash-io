@@ -7,7 +7,7 @@ export function isEnabled() {
 }
 
 export function createClient(): any {
-    return mqtt.connect(cfg.MQTT_URL);
+    return mqtt.connect(cfg.MQTT_URL, { username:cfg.MQTT_USER, password:cfg.MQTT_PASSWORD });
 }
 
 export function waitForMQTTReady(): Promise<void> {

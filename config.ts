@@ -10,5 +10,7 @@ export const USE_REDIS = process.env.USE_REDIS; // allows clustering of dncash-i
 export const REDIS_URL = process.env.REDIS_URL; // note: uses standard redis port on localhost if not specified
 export const USE_MQTT = process.env.USE_MQTT; // if set, triggered tokens will be sent to MQTT
 export const MQTT_URL = process.env.MQTT_URL || 'mqtt://localhost:1883'; // MQTT URL
+export const MQTT_USER = process.env.MQTT_USER || 'dncashio-pub'; // MQTT user name
+export const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'default'; // MQTT password
 export const MAX_HISTORY_DAYS = parseInt(process.env.MAX_HISTORY_DAYS) || 90; // maximum history to be kept in database tables
 export const USE_FIXED_TRIGGER_CODES = process.env.USE_FIXED_TRIGGER_CODES; // if set, always generate the same trigger code per ATM (uses the ATM device UUID). intended for demo setups only.
