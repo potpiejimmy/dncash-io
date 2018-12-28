@@ -10,7 +10,7 @@ export function readParam(customer_id: number, pkey: string): Promise<any> {
 export function writeParam(customer_id: number, pkey: string, pvalue: any): Promise<any> {
     return selectParam(customer_id, pkey).then(param => {
         if (!param) return insertParam(customer_id, pkey, pvalue);
-        else updateParam(customer_id, pkey, pvalue);
+        else return updateParam(customer_id, pkey, pvalue);
     })
 }
 

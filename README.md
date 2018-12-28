@@ -9,13 +9,14 @@ Go to https://dncash.dn-sol.net, use dncash/nixdorf as landing page credentials.
 
 dncash-io is based on Node.js and Express. It is written in Typescript. It uses a MySQL-compatible database as its main data storage.
 
-### Database - MySQL 5.x or compatible
+### Database - MySQL 5.7.8 or later, MySQL 8 recommended
 
 Create a UTF8 database named 'dncashio' with credentials 'dncashio'/'dncashio':
 
     mysql -uroot [-p]
     mysql> create database dncashio default charset utf8;
-    mysql> grant all on dncashio.* to 'dncashio'@'localhost' identified by 'dncashio';
+    mysql> create user 'dncashio'@'localhost' identified with mysql_native_password by 'dncashio';
+    mysql> grant all on dncashio.* to 'dncashio'@'localhost';
     mysql> exit
     
 Initial DB setup (DDL):
@@ -86,7 +87,7 @@ To deploy to an Elastic Beanstalk instance from the command line, install the AW
 
 This will create a load-balanced auto-scaling EB environment for Node.js. The ALB is needed for websockets and SSL support. Increase the load balancer's Idle Timeout attribute to a higher value to avoid closing websockets every 60 seconds (you can do that in the AWS web console).
 
-In AWS RDS, create a new database (mysql-5.6 is fine) with parameter sql_mode=STRICT_TRANS_TABLES (create a new parameter group for that first), then open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
+In AWS RDS, create a new database (recommended: mysql 8) with parameter sql_mode=STRICT_TRANS_TABLES (create a new parameter group for that first), then open the security group's inbound rule temporarily to execute the database setup remotely. To run the mysql commands given above against the remote DB, add "-h hostname" to the mysql commands:
 
     mysql -h aws-rds-endpoint-host ...
 

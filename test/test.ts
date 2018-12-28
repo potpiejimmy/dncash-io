@@ -817,7 +817,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeOut1 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                }, Buffer.from(res.body.secure_code, 'base64')).toString('hex');
                 done();
             });
         });
@@ -838,7 +838,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeOut2 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                }, Buffer.from(res.body.secure_code, 'base64')).toString('hex');
                 done();
             });
         });
@@ -859,7 +859,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeOutPlain = res.body.plain_code + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString();
+                }, Buffer.from(res.body.secure_code, 'base64')).toString();
                 done();
             });
         });
@@ -880,7 +880,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeOutPlainPartialCashouts = res.body.plain_code + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString();
+                }, Buffer.from(res.body.secure_code, 'base64')).toString();
                 done();
             });
         });
@@ -904,7 +904,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeIn1 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                }, Buffer.from(res.body.secure_code, 'base64')).toString('hex');
                 done();
             });
         });
@@ -925,7 +925,7 @@ describe("tokenapi.v1:", () => {
                 radioCodeIn2 = res.body.uuid + crypto.privateDecrypt({
                     key: keypair.private,
                     padding: constants.RSA_PKCS1_PADDING
-                }, new Buffer(res.body.secure_code, 'base64')).toString('hex');
+                }, Buffer.from(res.body.secure_code, 'base64')).toString('hex');
                 done();
             });
         });
