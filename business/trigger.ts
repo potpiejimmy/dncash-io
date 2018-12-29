@@ -1,4 +1,5 @@
 import * as uuid from "uuid/v4"; // Random-based UUID
+import * as crypto from 'crypto';
 import * as Device from "./device";
 import * as Param from './param';
 import * as Token from "./token";
@@ -116,7 +117,7 @@ function sendToken(triggercode: string, token: any) {
         token: token
     });
     if (mqtt.isEnabled()) {
-        mqttPublisher.publish('dncash-io/trigger/'+triggercode, tokenPublishData);
+        publishToMQTT(triggercode, tokenPublishData);
     }
     if (redis.isEnabled()) {
         redisPublisher.publish('trigger', tokenPublishData);
@@ -133,4 +134,17 @@ function localSendToken(triggercode: string, token: any) {
     if (!trigger.response) return; // not connected/registered locally
     // send the token to the trigger registrar
     trigger.response.json(token);
+}
+
+function publishToMQTT(triggercode: string, tokenPublishData: string) {
+    let signer = crypto.createSign("SHA256");
+    signer.write(tokenPublishData);
+    let key = config.MQTT_SIGNATURE_KEY.replace(/\\n/g,"\n");
+    console.log(key);
+    let signature = signer.sign(key).toString('base64');
+    // send out with signature:
+    mqttPublisher.publish('dncash-io/trigger/v1/'+triggercode, JSON.stringify({
+        data: tokenPublishData,
+        signature: signature
+    }));
 }

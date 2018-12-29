@@ -1,14 +1,15 @@
 import { IPool, IConnection, IError, createPool } from 'mysql';
+import * as cfg from '../config';
 
 var pool : IPool;
 
 function getPool():IPool {
     if (!pool) {
         pool = createPool({
-            connectionLimit : 10,
-            host            : process.env.DB_HOST || 'localhost',
+            connectionLimit : cfg.DB_POOL_SIZE,
+            host            : cfg.DB_HOST,
             user            : 'dncashio',
-            password        : 'dncashio',
+            password        : cfg.DB_PASSWORD,
             database        : 'dncashio'
         });
     }

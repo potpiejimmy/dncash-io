@@ -35,7 +35,9 @@ Redis is used to support trigger and websocket notifications in a load-balancing
 
 ### MQTT (optional)
 
-In scenarios where the cash device is triggered by the token device (scanning / receiving of trigger codes by the token device), dncash.io can optionally publish a message to a given MQTT queue endpoint instead of only responding to a waiting GET request on the trigger endpoint /dnapi/cash/v1/trigger/{triggercode}. Set the environment variable USE\_MQTT=true if you want to enable MQTT. Also set MQTT\_URL to a valid broker endpoint address (defaults to mqtt://localhost:1883, the endpoint is checked on startup). dncash.io will then publish the token to the topic named 'dncash-io/trigger/{triggercode}'.
+In scenarios where the cash device is triggered by the token device (scanning / receiving of trigger codes by the token device), dncash.io can optionally publish a message to a given MQTT queue endpoint instead of only responding to a waiting GET request on the trigger endpoint /dnapi/cash/v1/trigger/{triggercode}. Set the environment variable USE\_MQTT=true if you want to enable MQTT. Also set MQTT\_URL to a valid broker endpoint address (defaults to mqtt://localhost:1883, the endpoint is checked on startup). dncash.io will then publish the token to the topic named 'dncash-io/trigger/v1/{triggercode}'.
+
+To test MQTT locally, you can install 'mosca' as a broker and 'mqtt' as a client globally ('npm i -g mosca mqtt'). Then start the mosca server with 'mosca -v', connect a test client with 'mqtt sub -t dncash-io/trigger/v1/+ -v' and run the test suite ('npm t'). You should receive the MQTT triggered token with a server signature.
 
 ### Install / Build
 
@@ -105,6 +107,30 @@ For deployment from the console, simply run:
     npm run deploy
 
 Important note about websockets support: As of the time of this writing, the default Nginx configuration in EB is not configured for websockets. Thus, the commands in file .ebextensions/enable-websocket.config modify the Nginx configuration to enable HTTP Upgrade for websockets (and increases the socket idle timeout to 3600s). This configuration, however, is performed during deployment. If you modify the EB configuration in the Web console, this modified configuration may be lost and websocket connections will report HTTP 500. Re-deploy to fix.
+
+### Production settings
+
+For production, make sure to set at least the following environment properties:
+
+    NODE_ENV=production
+    DB_HOST=<database host name>
+    DB_PASSWORD=<database password>
+    JWT_SECRET=<a JWT server secret>
+
+For MQTT and/or Redis, set:
+
+    USE_MQTT=true
+    MQTT_URL=<mqtt broker URL>
+    MQTT_PASSWORD=<broker password>
+    MQTT_SIGNATURE_KEY=<a private key PEM, use '\n' between lines>
+    USE_REDIS=true
+    REDIS_URL=<redis host URL>
+
+Optionally, set:
+
+    MAX_HISTORY_DAYS=<number of history days>
+    JWT_VALID_HOURS=<number of hours>
+    DB_POOL_SIZE=<number of connections>
 
 ### User Interface / Portal App
 
