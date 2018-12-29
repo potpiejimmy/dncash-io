@@ -140,7 +140,6 @@ function publishToMQTT(triggercode: string, tokenPublishData: string) {
     let signer = crypto.createSign("SHA256");
     signer.write(tokenPublishData);
     let key = config.MQTT_SIGNATURE_KEY.replace(/\\n/g,"\n");
-    console.log(key);
     let signature = signer.sign(key).toString('base64');
     // send out with signature:
     mqttPublisher.publish('dncash-io/trigger/v1/'+triggercode, JSON.stringify({
