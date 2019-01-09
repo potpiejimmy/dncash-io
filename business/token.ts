@@ -48,7 +48,7 @@ export function createToken(customer: any, token: any): Promise<any> {
             token.info = JSON.stringify(token.info); // save info data as string
             if (token.expires) token.expires = new Date(token.expires);
             return insertNew(token).then(id => findById(id)).then(t => {
-                changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
+                notifyTokenObservers(customer.id, {uuid: uid});
                 journalizeToken(customer.id, "token", "create", t);
                 createdToken = exportToken(t);
                 retries = 0;
@@ -109,7 +109,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
         if (!device) return;
         return db.querySingle("update token set state='DELETED',plain_code=null,secure_code='' where state='OPEN' and owner_device_id=? and uuid=?", [device.id, uid]).then(res => {
             if (res.affectedRows) {
-                changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
+                notifyTokenObservers(customer.id, {uuid: uid});
                 return findByUUID(uid).then(t => {
                     journalizeToken(customer.id, "token", "delete", t);
                     return exportToken(t);
@@ -179,8 +179,8 @@ export function confirmByLockDeviceAndUUID(customer: any, device_uuid: string, u
                     }
             // end of DB transaction
             })).then(() => {
-                changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: uid});
-                if (token.owner_id != customer.id) changeNotifier.notifyObservers("token:"+customer.id, {uuid: uid});
+                notifyTokenObservers(token.owner_id, {uuid: uid});
+                if (token.owner_id != customer.id) notifyTokenObservers(customer.id, {uuid: uid}, false);
                 // re-read and export:
                 return findById(token.id).then(t => {
                     journalizeToken(token.owner_id, "token", "confirm", t);
@@ -208,7 +208,7 @@ function createTokenPartialCashout(dbCon: any, origToken: any, amount: number) {
         partial_from_uuid: origToken.uuid
     });
     return insertNew(token, dbCon).then(id => findById(id, dbCon)).then(t => {
-        changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: token.uuid});
+        notifyTokenObservers(token.owner_id, {uuid: token.uuid});
         journalizeToken(token.owner_id, "token", "create", t);
     });
 }
@@ -299,8 +299,8 @@ function verifyAndLockImpl(cashDevice: any, radio_code: string, signedData: Util
 function atomicLockAndReturn(cashDevice: any, token: any, action: string, state: string, reject_reason?: any): Promise<any> {
     return atomicLockTokenDB(token.id, cashDevice.id, state).then(success => {
         if (!success) throw "Token not in OPEN state.";
-        changeNotifier.notifyObservers("token:"+token.owner_id, {uuid: token.uuid});
-        if (token.owner_id != cashDevice.customer_id) changeNotifier.notifyObservers("token:"+cashDevice.customer_id, {uuid: token.uuid});
+        notifyTokenObservers(token.owner_id, {uuid: token.uuid});
+        if (token.owner_id != cashDevice.customer_id) notifyTokenObservers(cashDevice.customer_id, {uuid: token.uuid}, false);
         // re-read and export:
         return findById(token.id).then(t => {
             if (reject_reason) t.processing_info = JSON.stringify({ reject_reason: reject_reason });
@@ -425,4 +425,9 @@ function journalizeToken(customer_id: number, entity: string, action: string, to
     jtoken.info = JSON.parse(jtoken.info);
     jtoken.processing_info = JSON.parse(jtoken.processing_info);
     Journal.journalize(customer_id, entity, action, jtoken);
+}
+
+function notifyTokenObservers(customer_id: number, payload: any, notifyAdmins: boolean = true): void {
+    changeNotifier.notifyObservers("token:"+customer_id, payload);
+    if (notifyAdmins) changeNotifier.notifyObservers("token:admin", payload);
 }

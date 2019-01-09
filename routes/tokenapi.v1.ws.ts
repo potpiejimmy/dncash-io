@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Access from '../business/access';
+import * as Login from '../business/login';
 import { changeNotifier } from "../util/notifier";
 import * as uuid from "uuid/v4"; // Random-based UUID
 
@@ -39,22 +40,23 @@ export const tokenApiV1Ws: Router = Router();
  *               description: the token UUID
  *               example: c716c0ca-fc93-442b-a295-93f62e6e3a1f
  */
-tokenApiV1Ws.ws("/tokenchange/:listenKey", function (ws: WebSocket, req: Request) {
+tokenApiV1Ws.ws("/tokenchange/:listenKey", async function (ws: WebSocket, req: Request) {
     let wsid = uuid();
-    Access.findByKey(req.params.listenKey).then(access => {
-        if (!access || access.scope!='token-api') {
-            ws.close();
-            return;
-        }
-        changeNotifier.addObserver("token:"+access.customer_id, wsid, t => {
-            try {
-                ws.send(JSON.stringify(t));
-            } catch (err) {
-                changeNotifier.removeObserver("token:"+access.customer_id, wsid);
-            }
-        });
-        ws.onclose = () => {
-            changeNotifier.removeObserver("token:"+access.customer_id, wsid);
+    let access = await Access.findByKey(req.params.listenKey);
+    if (!access || access.scope!='token-api') {
+        ws.close();
+        return;
+    }
+    let user = await Login.findUserById(access.customer_id);
+    let scope = "token:" + (user.roles.includes('admin') ? 'admin' : user.id);
+    changeNotifier.addObserver(scope, wsid, t => {
+        try {
+            ws.send(JSON.stringify(t));
+        } catch (err) {
+            changeNotifier.removeObserver(scope, wsid);
         }
     });
+    ws.onclose = () => {
+        changeNotifier.removeObserver(scope, wsid);
+    }
 });
