@@ -152,6 +152,15 @@ routerAdminV1.delete("/devices/:id", function (request: Request, response: Respo
     .catch(err => next(err));
 });
 
+/*
+ * Updates fields of the given device
+ */
+routerAdminV1.put("/devices/:id", function (request: Request, response: Response, next: NextFunction) {
+    Device.updateDeviceByCustomerAndId(request.user, request.params.id, request.body)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
 // ------ accounts ------------------------
 
 /*

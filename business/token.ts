@@ -121,7 +121,7 @@ export function deleteByDeviceAndUUID(customer: any, device_uuid: string, uid: s
 
 export function updateByUUID(customer: any, uid: string, body: any): Promise<any> {
     if (body.info) body.info = JSON.stringify(body.info);
-    return updateToken(uid, body).then(updcount => {
+    return updateToken(customer.id, uid, body).then(updcount => {
         if (!updcount) return null;
         return findByUUID(uid).then(t => {
             journalizeToken(customer.id, "token", "update", t);
@@ -402,7 +402,7 @@ function confirmLockedToken(dbCon: any, id: number, newState: string, lockrefnam
     return db.query(dbCon, stmt, [newState,lockrefname,newAmount,JSON.stringify(processingInfo),new Date(),id]).then(res => res.affectedRows);
 }
 
-function updateToken(uid: string, newFields: any): Promise<boolean> {
+function updateToken(owner_id: number, uid: string, newFields: any): Promise<boolean> {
     let allowedFields = ['clearstate','info'];
     let params = [];
     let query = "update token set ";
@@ -413,7 +413,8 @@ function updateToken(uid: string, newFields: any): Promise<boolean> {
             params.push(newFields[f]);
         }
     })
-    query += " where uuid=?";
+    query += " where owner_id=? and uuid=?";
+    params.push(owner_id);
     params.push(uid);
     return db.querySingle(query, params).then(res => res.affectedRows);
 }

@@ -50,6 +50,24 @@ export function getAdminDeviceStatistics(customer: any): Promise<any> {
     return db.querySingle("select c.email,d.type,d.refname from customer c join customer_device d on d.customer_id=c.id");
 }
 
+export function updateDeviceByCustomerAndId(customer: any, id: number, newFields: any): Promise<boolean> {
+    // only update of type and refname fields allowed
+    let allowedFields = ['type','refname'];
+    let params = [];
+    let query = "update customer_device set ";
+    Object.keys(newFields).forEach(f => {
+        if (allowedFields.includes(f)) {
+            if (params.length) query += ", ";
+            query += f + "=?";
+            params.push(newFields[f]);
+        }
+    })
+    query += " where customer_id=? and id=?";
+    params.push(customer.id);
+    params.push(id);
+    return db.querySingle(query, params).then(res => res.affectedRows);
+}
+
 function insertNew(device: any): Promise<any> {
     return db.querySingle("insert into customer_device set ?", [device]);
 }
