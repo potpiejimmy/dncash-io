@@ -226,7 +226,7 @@ routerAdminV1.get("/tokenstat", function (request: Request, response: Response, 
  * Returns journal for the authenticated user
  */
 routerAdminV1.get("/journal", function (request: Request, response: Response, next: NextFunction) {
-    Journal.getJournal(request.user.id, request.query.limit, request.query.from, request.query.to, request.query.filter)
+    Journal.getJournal(request.user, request.query.limit, request.query.from, request.query.to, request.query.filter)
     .then(res => response.json(res))
     .catch(err => next(err));
 });

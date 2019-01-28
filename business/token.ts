@@ -131,7 +131,16 @@ export function updateByUUID(customer: any, uid: string, body: any): Promise<any
 }
 
 export function getStatistics(customer: any): Promise<any> {
-    return db.querySingle("select t.state, t.type, sum(amount) as amount, count(*) as count from token t left outer join customer_device d on t.lock_device_id=d.id where t.owner_id=? or d.customer_id=? group by t.state, t.type", [customer.id,customer.id]);
+    let params: Array<any> = [];
+    let sql = "select t.state, t.type, sum(amount) as amount, count(*) as count from token t left outer join customer_device d on t.lock_device_id=d.id";
+    if (!customer.roles.includes('admin')) {
+        // restrict to owned or locked by user only:
+        sql += " where t.owner_id=? or d.customer_id=?";
+        params.push(customer.id);
+        params.push(customer.id);
+    }
+    sql += " group by t.state, t.type";
+    return db.querySingle(sql, params);
 }
 
 export function verifyAndLock(customer: any, device_uuid: string, radio_code: string): Promise<any> {
