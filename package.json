@@ -1,6 +1,6 @@
 {
   "name": "dncash-io",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "dncash.io core API service",
   "main": "app.ts",
   "scripts": {
@@ -21,13 +21,13 @@
   "devDependencies": {
     "@types/chai-http": "^3.0.5",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^10.12.18",
+    "@types/node": "^10.12.19",
     "chai": "^4.2.0",
     "chai-http": "^4.2.1",
     "concurrently": "^4.1.0",
     "mocha": "^5.2.0",
     "nodemon": "^1.18.9",
-    "typescript": "^3.2.2"
+    "typescript": "^3.2.4"
   },
   "dependencies": {
     "base32": "0.0.6",
