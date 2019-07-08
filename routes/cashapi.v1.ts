@@ -326,6 +326,12 @@ cashApiV1.get("/trigger/:triggercode", function (request: Request, response: Res
  *         in: query
  *         required: true
  *         type: string
+ *       - name: body
+ *         description: Card track data
+ *         required: true
+ *         in: body
+ *         example:
+ *             t2: '6725902100325021973D22122012534107044'
  *     responses:
  *       200:
  *         description: Returns an authorization nonce and additional customer data

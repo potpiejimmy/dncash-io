@@ -6,6 +6,7 @@ import * as Token from "../business/token";
 import * as Journal from "../business/journal";
 import * as Param from "../business/param";
 import * as Login from "../business/login";
+import * as XCard from "../business/xcard";
 
 export const routerAdminV1: Router = Router();
 
@@ -257,6 +258,26 @@ routerAdminV1.put("/params/:pkey", function (request: Request, response: Respons
 routerAdminV1.delete("/params/:pkey", function (request: Request, response: Response, next: NextFunction) {
     Param.removeParam(request.user.id, request.params.pkey)
     .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+// ------- card auth ---------------
+
+/**
+ * Gets current card authorizations
+ */
+routerAdminV1.get("/xcard/auth", function (request: Request, response: Response, next: NextFunction) {
+    XCard.getAuths(request.user)
+    .then(res => response.json(res))
+    .catch(err => next(err));
+});
+
+/**
+ * Remove a card authorization
+ */
+routerAdminV1.delete("/xcard/auth/:nonce", function (request: Request, response: Response, next: NextFunction) {
+    XCard.deleteAuth(request.user, request.params.nonce)
+    .then(res =>  response.status(204).send())
     .catch(err => next(err));
 });
 
