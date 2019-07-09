@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import * as Device from "../business/device";
 import * as Token from "../business/token";
+import * as XCard from "../business/xcard";
 
 export const tokenApiV1: Router = Router();
 
@@ -601,6 +602,62 @@ tokenApiV1.put("/tokens/:uid", function (request: Request, response: Response, n
     .then(res => {
         if (res) response.json(res);
         else response.status(404).json("Not found");
+    })
+    .catch(err => next(err));
+});
+
+/**
+ * @swagger
+ * /dnapi/token/v1/xcard/auth/{nonce}:
+ *   get:
+ *     summary: Verifies and returns card authorization data for the given nonce
+ *     description: Returns the authorization data associated with the given nonce or 404 if nonce not valid.
+ *     tags:
+ *       - Token-API
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: DN-API-KEY
+ *         description: Token API Key
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: DN-API-SECRET
+ *         description: Token API Secret
+ *         in: header
+ *         required: true
+ *         type: string
+ *       - name: nonce
+ *         description: A card auth nonce
+ *         in: path
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Returns token information
+ *         schema:
+ *           type: object
+ *           properties:
+ *             nonce:
+ *               type: string
+ *               description: a globally unique and random nonce
+ *               example: 66a57085-07ad-4550-ad21-22eac31d0ad0
+ *             t2:
+ *               type: string
+ *               description: associated card data
+ *               example: '6725902100325021973D22122012534107044'
+ *       401:
+ *         description: unauthorized
+ *         schema:
+ *           $ref: '#/definitions/unauthorized'
+ *       404:
+ *         description: nonce invalid / not found
+ */
+tokenApiV1.get("/xcard/auth/:nonce", function (request: Request, response: Response, next: NextFunction) {
+    XCard.getAuth(request.user, request.params.nonce)
+    .then(res => {
+        if (res) response.json(res);
+        else response.status(404).json("Nonce not found");
     })
     .catch(err => next(err));
 });

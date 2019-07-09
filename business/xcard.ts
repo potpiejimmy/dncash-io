@@ -17,19 +17,24 @@ export async function createAuth(customer: any, device_uuid: string, cardData: a
     cardData.created = Date.now();
     cardData.nonce = nonce;
     cardData.device_uuid = device_uuid;
-    getAuthsForCustomer(customer)[nonce] = cardData;
-    changeNotifier.notifyObservers("cardauth:"+customer.id, {});
 
     let testcardmapping = await Param.readParam(customer.id, "testcardmapping");
     if (testcardmapping && cardData.t2.match(testcardmapping.regex)) {
         cardData.url = testcardmapping.url;
     }
+    getAuthsForCustomer(customer)[nonce] = cardData;
+    changeNotifier.notifyObservers("cardauth:"+customer.id, {});
     return cardData;
 }
 
 export async function getAuths(customer: any): Promise<any> {
     let au = getAuthsForCustomer(customer);
     return Object.keys(au).map(k => au[k]).sort((a,b) => (a.created-b.created));
+}
+
+export async function getAuth(customer: any, nonce: string): Promise<any> {
+    let au = getAuthsForCustomer(customer);
+    return au[nonce];
 }
 
 export async function deleteAuth(customer: any, nonce: string): Promise<void> {
