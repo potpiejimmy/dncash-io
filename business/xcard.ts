@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import * as base32 from 'base32';
 import { changeNotifier } from "../util/notifier";
+import * as Param from './param';
 
 // TODO: keep auths out of memory in the future
 let auths = {};
@@ -18,6 +19,12 @@ export async function createAuth(customer: any, device_uuid: string, cardData: a
     cardData.device_uuid = device_uuid;
     getAuthsForCustomer(customer)[nonce] = cardData;
     changeNotifier.notifyObservers("cardauth:"+customer.id, {});
+
+    let testcardmapping = await Param.readParam(customer.id, "testcardmapping");
+    if (testcardmapping && cardData.t2.match(testcardmapping.regex)) {
+        cardData.url = testcardmapping.url;
+    }
+    return cardData;
 }
 
 export async function getAuths(customer: any): Promise<any> {
