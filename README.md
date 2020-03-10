@@ -39,6 +39,9 @@ In scenarios where the cash device is triggered by the token device (scanning / 
 
 To test MQTT locally, you can install 'mosca' as a broker and 'mqtt' as a client globally ('npm i -g mosca mqtt'). Then start the mosca server with 'mosca -v', connect a test client with 'mqtt sub -t dncash-io/trigger/v1/+ -v' and run the test suite ('npm t'). You should receive the MQTT triggered token with a server signature.
 
+Starting with version 1.4.x, dncash.io supports using an embedded MQTT broker based on mosca using Redis as its clustering backend. To use the embedded MQTT broker, set
+MQTT\_USE\_EMBEDDED=true (in conjunction with USE\_MQTT=true). In this case, the redis cluster given by the REDIS_URL is used.
+
 ### Install / Build
 
 Enter
@@ -117,11 +120,24 @@ For production, make sure to set at least the following environment properties:
     DB_PASSWORD=<database password>
     JWT_SECRET=<a JWT server secret>
 
-For MQTT and/or Redis, set:
+For Redis clustering support, set:
+
+    USE_REDIS=true
+    REDIS_URL=<redis host URL>
+
+For separate MQTT triggering, set:
 
     USE_MQTT=true
     MQTT_URL=<mqtt broker URL>
     MQTT_PASSWORD=<broker password>
+    MQTT_SIGNATURE_KEY=<a private key PEM, use '\n' between lines>
+
+For embedded MQTT with Redis, set:
+
+    USE_MQTT=true
+    MQTT_USE_EMBEDDED=true
+    MQTT_EMBEDDED_PORT=xxxx (default: 1883)
+    MQTT_EMBEDDED_PORT_HTTP=yyyy (default: 8088)
     MQTT_SIGNATURE_KEY=<a private key PEM, use '\n' between lines>
     USE_REDIS=true
     REDIS_URL=<redis host URL>
