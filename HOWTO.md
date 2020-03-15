@@ -3,6 +3,7 @@ Each customer that registers with dncash-io typically uses one or more of the fo
 2. [__Cash API__](#Cash-API): The Cash API is used by secure cash devices such as ATMs and cash registers. It provides methods to verify, lock and confirm cash tokens with the service.
 3. [__Mobile API__](#Mobile-API): The Mobile API is used directly by consumer devices to trigger cashout operations at a cash-point.
 4. [__Clearing API__](#Clearing-API): The Clearing API provides access to account clearing information to be used for settlement processes.
+5. [__Authorization API__](#Authorization-API): The Authorization API provides authorization services such as PSD2 XS2A or card and PIN.
 
 ## Typical usage scenario, step-by-step
 

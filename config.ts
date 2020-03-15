@@ -14,7 +14,7 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 export const JWT_VALID_HOURS = parseInt(process.env.JWT_VALID_HOURS) || 168;
 
 // valid API scopes
-export const API_SCOPES = ["token-api", "cash-api", "clearing-api"];
+export const API_SCOPES = ["token-api", "cash-api", "clearing-api", "auth-api"];
 
 // lower security if using short plain codes
 export const USE_PLAIN_CODES = false;

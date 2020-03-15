@@ -21,6 +21,9 @@ export const tokenApiV1: Router = Router();
  *   - name: Clearing-API
  *     description: The Clearing API provides access to account clearing information to be
  *                  used for settlement processes.
+ *   - name: Authorization-API
+ *     description: The Authorization API provides authorization services such as PSD2 XS2A 
+ *                  or card and PIN.
  * 
  * definitions:
  *   unauthorized:

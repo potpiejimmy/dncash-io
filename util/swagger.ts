@@ -7,7 +7,7 @@ export function setup(app: any): void {
         swaggerDefinition: {
             info: {
                 title: 'dncash.io APIs', // Title (required) 
-                version: process.env.npm_package_version, // Version (required)
+                version: require('../../package.json').version, // Version (required)
                 description: fs.readFileSync('./HOWTO.md').toString()
             }
         },

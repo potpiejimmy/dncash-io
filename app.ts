@@ -46,6 +46,7 @@ import { cashApiV1 } from "./routes/cashapi.v1";
 import { mobileApiV1 } from "./routes/mobileapi.v1";
 import { clearingApiV1 } from "./routes/clearingapi.v1";
 import { clearingApiV1Ws } from "./routes/clearingapi.v1.ws";
+import { authApiV1 } from "./routes/authapi.v1";
 
 app.use(nocache());
 app.use(json());
@@ -82,6 +83,8 @@ app.use("/dnapi/cash/v1", apiauth.verifyAccess, apiauth.verifyCashApi, apiauth.v
 app.use("/dnapi/clearing/v1", apiauth.verifyAccess, apiauth.verifyClearingApi, apiauth.verifyCustomer, clearingApiV1);
 // Mobile API (intentionally unsecured, since it provides the secure trigger API)
 app.use("/dnapi/mobile/v1", mobileApiV1);
+// Mid-security route for Authorization API using only API access key for identification:
+app.use("/dnapi/auth/v1", apiauth.verifyApiKey, apiauth.verifyAuthApi, apiauth.verifyCustomer, authApiV1);
 
 // WebSocket routes (unsecured)
 app.use("/dnapi/adminws/v1", routerAdminV1Ws);
